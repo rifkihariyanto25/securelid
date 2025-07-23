@@ -1,0 +1,34 @@
+{
+    "sidebarItems": [
+        {
+            "name": "Dashboard",
+            "href": "/dashboard",
+            "icon": "House"
+        },
+        {
+            "name": "Artikel",
+            "href": "/artikel",
+            "icon": "Info"
+        },
+        {
+            "name": "Pengguna",
+            "href": "/pengguna",
+            "icon": "Users"
+        },
+        {
+            "name": "Notifikasi",
+            "href": "/notifikasi",
+            "icon": "Bell"
+        },
+        {
+            "name": "Pengaturan",
+            "href": "/pengaturan",
+            "icon": "Settings"
+        },
+        {
+            "name": "Logout",
+            "href": "/logout",
+            "icon": "LogOut"
+        }
+    ]
+}
