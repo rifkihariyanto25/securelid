@@ -4,7 +4,8 @@ import { Bell } from "lucide-react";
 
 const Header = () => {
     return (
-        <header className="bg-[#1e1e1e] shadow-lg border-b border-[#1f1f1f] mx-4 sm:mx-6 lg:mx-8 mt-4 mb-2 rounded-lg">
+        <header className="bg-[#1e1e1e] shadow-lg border-b border-[#1f1f1f] mx-4 sm:mx-6 lg:mx-8 mt-4 mb-2 rounded-lg sticky top-0 z-50 backdrop-blur">
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
                 <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-100">
                     Dashboard
@@ -12,8 +13,6 @@ const Header = () => {
 
                 {/* Bagian kanan: ikon, avatar, nama */}
                 <div className="flex items-center space-x-3 sm:space-x-6">
-
-
 
                     {/* Notifikasi (Bell Icon) */}
                     <div className="relative">

@@ -2,7 +2,7 @@
     "sidebarItems": [
         {
             "name": "Dashboard",
-            "href": "/dashboard",
+            "href": "/overview",
             "icon": "House"
         },
         {
