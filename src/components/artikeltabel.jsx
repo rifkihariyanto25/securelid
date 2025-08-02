@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
 import {
     Edit,
     Trash2,
@@ -9,63 +8,56 @@ import {
     Plus,
     Search,
     Calendar,
-    User
+    User,
+    Loader2
 } from "lucide-react";
+import supabase from "@/lib/supabase";
+import ArtikelForm from "./artikelform";
 
 const ArtikelTabel = () => {
-    const [artikel, setArtikel] = useState([
-        {
-            id: 1,
-            title: "Cara ngoding",
-            author: "Rifki",
-            category: "Programming",
-            publishDate: "2024-01-15",
-            image: "/api/placeholder/60/60"
-        },
-        {
-            id: 2,
-            title: "kamu nanya?",
-            author: "zaky",
-            category: "Web Development",
-            publishDate: "2024-01-14",
-            image: "/api/placeholder/60/60"
-        },
-        {
-            id: 3,
-            title: "Ikan mancing",
-            author: "Hendrik",
-            category: "AI/ML",
-            publishDate: "2024-01-13",
-            image: "/api/placeholder/60/60"
-        },
-        {
-            id: 4,
-            title: "Cara Biar Mandi",
-            author: "Aarif",
-            category: "Database",
-            publishDate: "2024-01-12",
-            image: "/api/placeholder/60/60"
-        },
-        {
-            id: 5,
-            title: "Xixixi Cahnnel",
-            author: "Joshua",
-            category: "Mobile",
-            status: "Draft",
-            publishDate: "2024-01-11",
-            image: "/api/placeholder/60/60"
-        }
-    ]);
-
+    const [artikel, setArtikel] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
+    
+    // Form state
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [formType, setFormType] = useState("add"); // add, edit, view
+    const [currentArtikel, setCurrentArtikel] = useState(null);
+    
+    // Fetch artikel from Supabase
+    useEffect(() => {
+        fetchArtikel();
+    }, []);
+    
+    const fetchArtikel = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('artikel')
+                .select('*')
+                .order('created_at', { ascending: false });
+                
+            if (error) throw error;
+            
+            setArtikel(data || []);
+        } catch (error) {
+            console.error('Error fetching artikel:', error);
+            setError('Gagal memuat data artikel');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Filter dan search logic
     const filteredArtikel = artikel.filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.author.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = 
+            (item.titleartikel && item.titleartikel.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (item.penulisartikel && item.penulisartikel.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesFilter = filterStatus === "All" || item.status === filterStatus;
         return matchesSearch && matchesFilter;
     });
@@ -77,24 +69,85 @@ const ArtikelTabel = () => {
 
     // CRUD Actions
     const handleView = (id) => {
-        console.log("View artikel:", id);
-        // Implement view logic
+        const artikelToView = artikel.find(item => item.idartikel === id);
+        setCurrentArtikel(artikelToView);
+        setFormType("view");
+        setIsFormOpen(true);
     };
 
     const handleEdit = (id) => {
-        console.log("Edit artikel:", id);
-        // Implement edit logic
+        const artikelToEdit = artikel.find(item => item.idartikel === id);
+        setCurrentArtikel(artikelToEdit);
+        setFormType("edit");
+        setIsFormOpen(true);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
-            setArtikel(artikel.filter(item => item.id !== id));
+            try {
+                setLoading(true);
+                const { error } = await supabase
+                    .from('artikel')
+                    .delete()
+                    .eq('idartikel', id);
+                
+                if (error) throw error;
+                
+                // Refresh data setelah menghapus
+                fetchArtikel();
+                alert("Artikel berhasil dihapus");
+            } catch (error) {
+                console.error('Error deleting artikel:', error);
+                alert("Gagal menghapus artikel");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
     const handleAdd = () => {
-        console.log("Add new artikel");
-        // Implement add logic
+        setCurrentArtikel(null);
+        setFormType("add");
+        setIsFormOpen(true);
+    };
+    
+    const handleFormSubmit = async (formData) => {
+        try {
+            setLoading(true);
+            
+            if (formType === "add") {
+                // Create new artikel
+                const { error } = await supabase
+                    .from('artikel')
+                    .insert([formData]);
+                
+                if (error) throw error;
+                alert("Artikel berhasil ditambahkan");
+            } else if (formType === "edit") {
+                // Update existing artikel
+                const { error } = await supabase
+                    .from('artikel')
+                    .update(formData)
+                    .eq('idartikel', currentArtikel.idartikel);
+                
+                if (error) throw error;
+                alert("Artikel berhasil diperbarui");
+            }
+            
+            // Close form and refresh data
+            setIsFormOpen(false);
+            fetchArtikel();
+        } catch (error) {
+            console.error('Error submitting artikel:', error);
+            alert("Gagal menyimpan artikel");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setCurrentArtikel(null);
     };
 
     const getStatusColor = (status) => {
@@ -109,42 +162,33 @@ const ArtikelTabel = () => {
     };
 
     return (
-        <motion.div
-            className="bg-[rgb(0,0,0)] backdrop-blur-md shadow-lg rounded-xl p-4 md:p-8 border-[1px] border-[#3f3f3f] mx-2 md:mx-0 mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-        >
+        <div className="bg-white shadow-md rounded-xl p-4 md:p-8 border border-[var(--border)] mx-2 md:mx-0 mb-4">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-100 mb-1">
-                        Artikel Management
-                    </h2>
+                    {/* Artikel Management title removed as requested */}
                 </div>
 
-                <motion.button
+                <button
                     onClick={handleAdd}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 bg-[var(--primary)] hover:bg-[var(--primary)]/80 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
                 >
                     <Plus size={18} />
                     Tambah Artikel
-                </motion.button>
+                </button>
             </div>
 
             {/* Controls Section */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
                 {/* Search Bar */}
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)]/60" size={18} />
                     <input
                         type="text"
                         placeholder="Cari artikel atau penulis..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-gray-800/50 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full bg-[var(--secondary)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-[var(--foreground)] placeholder-[var(--foreground)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
                     />
                 </div>
 
@@ -152,113 +196,121 @@ const ArtikelTabel = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
-                    <div className="text-2xl font-bold text-gray-100">{artikel.length}</div>
-                    <div className="text-sm text-gray-400">Total Artikel</div>
+                <div className="bg-[var(--secondary)] rounded-lg p-4 border border-[var(--border)]">
+                    <div className="text-2xl font-bold text-[var(--primary)]">{artikel.length}</div>
+                    <div className="text-sm text-[var(--foreground)]/70">Total Artikel</div>
                 </div>
-
             </div>
+
+            {/* Loading State */}
+            {loading && (
+                <div className="flex justify-center items-center py-8">
+                    <Loader2 className="animate-spin text-[var(--primary)]" size={32} />
+                    <span className="ml-2 text-[var(--foreground)]">Memuat data...</span>
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong className="font-bold">Error! </strong>
+                    <span className="block sm:inline">{error}</span>
+                </div>
+            )}
 
             {/* Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-gray-700">
-                            <th className="text-left py-4 px-2 text-gray-300 font-semibold">Judul Artikel</th>
-                            <th className="text-left py-4 px-2 text-gray-300 font-semibold hidden md:table-cell">Penulis</th>
-                            <th className="text-left py-4 px-2 text-gray-300 font-semibold hidden lg:table-cell">Konten Artikel</th>
-                            <th className="text-left py-4 px-2 text-gray-300 font-semibold hidden md:table-cell">Tanggal</th>
-                            <th className="text-center py-4 px-2 text-gray-300 font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentItems.length > 0 ? currentItems.map((item, index) => (
-                            <motion.tr
-                                key={item.id}
-                                className="border-b border-gray-700/50 hover:bg-gray-800/30 transition-colors duration-200"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                            >
-                                <td className="py-4 px-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                                            <span className="text-xl">{item.title.charAt(0)}</span>
-                                        </div>
-                                        <div>
-                                            <div className="font-medium text-gray-100 line-clamp-2 max-w-xs">
-                                                {item.title}
-                                            </div>
-                                            <div className="text-sm text-gray-400 md:hidden">
-                                                {item.author}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="py-4 px-2 hidden md:table-cell">
-                                    <div className="flex items-center gap-2 text-gray-300">
-                                        <User size={16} className="text-gray-400" />
-                                        {item.author}
-                                    </div>
-                                </td>
-                                <td className="py-4 px-2 hidden lg:table-cell">
-                                    <span className="bg-gray-700/50 text-gray-300 px-3 py-1 rounded-full text-sm border border-gray-600">
-                                        {item.category}
-                                    </span>
-                                </td>
-
-                                <td className="py-4 px-2 hidden md:table-cell">
-                                    <div className="flex items-center gap-2 text-gray-400 text-sm">
-                                        <Calendar size={14} />
-                                        {new Date(item.publishDate).toLocaleDateString('id-ID')}
-                                    </div>
-                                </td>
-
-                                <td className="py-4 px-2">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <motion.button
-                                            onClick={() => handleView(item.id)}
-                                            className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors duration-200"
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            title="View"
-                                        >
-                                            <Eye size={16} />
-                                        </motion.button>
-                                        <motion.button
-                                            onClick={() => handleEdit(item.id)}
-                                            className="p-2 text-yellow-400 hover:bg-yellow-500/20 rounded-lg transition-colors duration-200"
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            title="Edit"
-                                        >
-                                            <Edit size={16} />
-                                        </motion.button>
-                                        <motion.button
-                                            onClick={() => handleDelete(item.id)}
-                                            className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors duration-200"
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={16} />
-                                        </motion.button>
-                                    </div>
-                                </td>
-                            </motion.tr>
-                        )) : (
-                            <tr>
-                                <td colSpan="7" className="py-12 text-center">
-                                    <div className="text-gray-400">
-                                        <div className="text-lg mb-2">Tidak ada data artikel</div>
-                                        <div className="text-sm">Coba ubah filter atau tambah artikel baru</div>
-                                    </div>
-                                </td>
+            {!loading && !error && (
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-[var(--border)]">
+                                <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold">Judul Artikel</th>
+                                <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold hidden md:table-cell">Penulis</th>
+                                <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold hidden lg:table-cell">Konten Artikel</th>
+                                <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold hidden md:table-cell">Tanggal</th>
+                                <th className="text-center py-4 px-2 text-[var(--foreground)] font-semibold">Actions</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {currentItems.length > 0 ? currentItems.map((item) => (
+                                <tr
+                                    key={item.idartikel}
+                                    className="border-b border-[var(--border)] hover:bg-[var(--secondary)]/50 transition-colors duration-200"
+                                >
+                                    <td className="py-4 px-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-[var(--secondary)] rounded-lg flex items-center justify-center">
+                                                <span className="text-xl text-[var(--primary)]">{item.titleartikel ? item.titleartikel.charAt(0) : '?'}</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-[var(--foreground)] line-clamp-2 max-w-xs">
+                                                    {item.titleartikel}
+                                                </div>
+                                                <div className="text-sm text-[var(--foreground)]/70 md:hidden">
+                                                    {item.penulisartikel}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-2 hidden md:table-cell">
+                                        <div className="flex items-center gap-2 text-[var(--foreground)]">
+                                            <User size={16} className="text-[var(--foreground)]/70" />
+                                            {item.penulisartikel}
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-2 hidden lg:table-cell">
+                                        <span className="bg-[var(--secondary)] text-[var(--foreground)] px-3 py-1 rounded-full text-sm border border-[var(--border)]">
+                                            {item.kontenartikel ? (item.kontenartikel.length > 30 ? item.kontenartikel.substring(0, 30) + '...' : item.kontenartikel) : 'Tidak ada konten'}
+                                        </span>
+                                    </td>
+
+                                    <td className="py-4 px-2 hidden md:table-cell">
+                                        <div className="flex items-center gap-2 text-[var(--foreground)]/70 text-sm">
+                                            <Calendar size={14} />
+                                            {new Date(item.created_at).toLocaleDateString('id-ID')}
+                                        </div>
+                                    </td>
+
+                                    <td className="py-4 px-2">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => handleView(item.idartikel)}
+                                                className="p-2 text-[var(--primary)] hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                title="View"
+                                            >
+                                                <Eye size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(item.idartikel)}
+                                                className="p-2 text-amber-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                title="Edit"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item.idartikel)}
+                                                className="p-2 text-red-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan="7" className="py-12 text-center">
+                                        <div className="text-[var(--foreground)]/70">
+                                            <div className="text-lg mb-2">Tidak ada data artikel</div>
+                                            <div className="text-sm">Coba ubah filter atau tambah artikel baru</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -301,7 +353,18 @@ const ArtikelTabel = () => {
                     </div>
                 </div>
             )}
-        </motion.div>
+            
+            {/* Form Popup */}
+            {isFormOpen && (
+                <ArtikelForm 
+                    isOpen={isFormOpen}
+                    onClose={handleCloseForm}
+                    artikel={currentArtikel}
+                    onSubmit={handleFormSubmit}
+                    formType={formType}
+                />
+            )}
+        </div>
     );
 };
 

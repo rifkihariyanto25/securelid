@@ -59,27 +59,27 @@ const Sidebar = () => {
 
     if (error) {
         return (
-            <div className="w-64 h-full bg-[#121212] p-4 border-r border-[#222222]">
-                <div className="text-red-400 text-sm">Error loading sidebar: {error}</div>
+            <div className="w-64 h-full bg-white p-4 border-r border-[var(--border)]">
+                <div className="text-red-500 text-sm">Error loading sidebar: {error}</div>
             </div>
         );
     }
 
     return (
         <div
-            className={`relative z-10 transition-all duration-300 ease-in-out flex-shrink-0 ${isSidebarOpen ? "w-64" : "w-20"
+            className={`relative z-10 transition-all duration-200 flex-shrink-0 ${isSidebarOpen ? "w-64" : "w-20"
                 }`}
         >
-            <div className="h-full bg-[#121212] backdrop-blur-md p-4 flex flex-col border-r border-[#222222]">
+            <div className="h-full bg-white p-4 flex flex-col border-r border-[var(--border)]">
                 {/* Toggle Button */}
                 <button
                     onClick={() => setSidebarOpen(!isSidebarOpen)}
-                    className="p-2 rounded-full hover:bg-[#2f2f2f] transition-colors max-w-fit cursor-pointer group"
+                    className="p-2 rounded-full hover:bg-[var(--secondary)] transition-colors max-w-fit cursor-pointer"
                     aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                 >
                     <Menu
                         size={24}
-                        className="text-gray-300 group-hover:text-white transition-colors"
+                        className="text-[var(--foreground)]"
                     />
                 </button>
 
@@ -87,7 +87,7 @@ const Sidebar = () => {
                 <nav className="mt-8 flex-grow" role="navigation">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--primary)]"></div>
                         </div>
                     ) : (
                         sidebarItems.map((item) => {
@@ -102,20 +102,19 @@ const Sidebar = () => {
                                     className="block"
                                 >
                                     <div
-                                        className={`flex items-center p-4 text-sm font-medium rounded-lg hover:bg-[#2f2f2f] transition-all duration-200 mb-2 group ${isActive
-                                                ? "bg-[#2f2f2f] text-white border-l-4 border-blue-500"
-                                                : "text-gray-300 hover:text-white"
+                                        className={`flex items-center p-4 text-sm font-medium rounded-lg hover:bg-[var(--secondary)] transition-all duration-200 mb-2 group ${isActive
+                                                ? "bg-[var(--secondary)] text-[var(--foreground)] border-l-4 border-[var(--primary)]"
+                                                : "text-[var(--foreground)]"
                                             }`}
                                         role="menuitem"
                                     >
                                         {IconComponent ? (
                                             <IconComponent
                                                 size={20}
-                                                className={`flex-shrink-0 transition-colors ${isActive ? "text-blue-500" : "group-hover:text-white"
-                                                    }`}
+                                                className={`flex-shrink-0 ${isActive ? "text-[var(--primary)]" : ""}`}
                                             />
                                         ) : (
-                                            <div className="w-5 h-5 bg-gray-600 rounded flex-shrink-0" />
+                                            <div className="w-5 h-5 bg-[var(--secondary)] rounded flex-shrink-0" />
                                         )}
                                         {isSidebarOpen && (
                                             <span className="ml-4 whitespace-nowrap transition-opacity duration-200">
@@ -123,7 +122,7 @@ const Sidebar = () => {
                                             </span>
                                         )}
                                         {!isSidebarOpen && (
-                                            <div className="absolute left-20 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                            <div className="absolute left-20 bg-[var(--secondary)] text-[var(--foreground)] px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                                                 {item.name}
                                             </div>
                                         )}
