@@ -174,22 +174,12 @@ export default function Home() {
                 </div>
             </section>
 
-            <section className="py-20 relative bg-blue-600">
-                <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-full opacity-10">
-                        {[...Array(15)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="absolute h-px w-full"
-                                style={{
-                                    top: `${i * 7}%`,
-                                    background: `linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent)`,
-                                    transform: `rotate(${i % 2 === 0 ? 3 : -3}deg)`,
-                                }}
-                            />
-                        ))}
-                    </div>
-                </div>
+            <section className="py-24" style={{ 
+                backgroundImage: 'url("/Gradient Preview.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+            }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="text-center mb-16">
                         <motion.h2
