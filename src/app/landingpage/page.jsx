@@ -100,36 +100,7 @@ export default function Home() {
                         </motion.div>
                     </motion.div>
                     <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, ease: "circOut", delay: 0.3 }} className="flex-1">
-                        <svg width="100%" height="100%" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-md mx-auto">
-                            <g transform="translate(400, 300)">
-                                {/* Pahlawan Digital dengan Kostum Tradisional */}
-                                <g>
-                                    {/* Siluet Pahlawan */}
-                                    <path d="M-150,-50 C-130,-120 130,-120 150,-50 L120,200 L-120,200 Z" fill="#0284c7" stroke="white" strokeWidth="2" />
-                                    
-                                    {/* Kepala */}
-                                    <circle cx="0" cy="-150" r="70" fill="#0284c7" stroke="white" strokeWidth="2" />
-                                    
-                                    {/* Mahkota/Headpiece */}
-                                    <path d="M-60,-200 L0,-250 L60,-200" stroke="white" strokeWidth="4" fill="none" />
-                                    <path d="M-40,-200 L0,-230 L40,-200" stroke="white" strokeWidth="3" fill="none" />
-                                    
-                                    {/* Simbol Keamanan */}
-                                    <rect x="-30" y="-30" width="60" height="80" rx="10" fill="white" />
-                                    <circle cx="0" cy="-5" r="15" fill="#0284c7" stroke="white" strokeWidth="2" />
-                                    <path d="M0,-15 L0,5" stroke="white" strokeWidth="4" />
-                                    
-                                    {/* Perisai */}
-                                    <path d="M-100,50 L-80,30 L80,30 L100,50 L80,150 L0,200 L-80,150 Z" fill="#0369a1" stroke="white" strokeWidth="2" />
-                                    <path d="M-50,70 L50,70 L30,150 L0,180 L-30,150 Z" fill="white" opacity="0.3" />
-                                    
-                                    {/* Simbol @ */}
-                                    <circle cx="0" cy="100" r="30" fill="none" stroke="white" strokeWidth="4" />
-                                    <path d="M15,100 C15,108 8,115 0,115 C-8,115 -15,108 -15,100 C-15,92 -8,85 0,85 C8,85 15,92 15,100 Z" fill="none" stroke="white" strokeWidth="4" />
-                                    <path d="M15,100 L30,100" stroke="white" strokeWidth="4" />
-                                </g>
-                            </g>
-                        </svg>
+                        <img src="/icon hero.png" alt="Hero Icon" className="w-full max-w-md mx-auto" />
                     </motion.div>
                 </div>
                 <motion.div onClick={handleScrollDown} className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-blue-200 flex flex-col items-center cursor-pointer" animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
