@@ -41,12 +41,12 @@ export default function Navbar() {
           </ul>
           
           <motion.a 
-            href="/artikel"
+            href="/login"
             whileHover={{ scale: 1.05 }} 
             whileTap={{ scale: 0.95 }} 
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 inline-block"
           >
-            Tambah Artikel
+            Login
           </motion.a>
         </div>
 
@@ -72,8 +72,8 @@ export default function Navbar() {
                 </li>
               ))}
               <li className="mt-4">
-                <a href="/artikel" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 w-full rounded-md transition-colors duration-200 inline-block text-center">
-                  Tambah Artikel
+                <a href="/" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 w-full rounded-md transition-colors duration-200 inline-block text-center">
+                  Login
                 </a>
               </li>
             </ul>

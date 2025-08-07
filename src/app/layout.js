@@ -22,13 +22,15 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  const isLandingPage = pathname === "/landingpage";
+  // Halaman yang tidak menampilkan sidebar
+  const noSidebarPages = ["/landingpage", "/", "/login", "/sign-up", "/forgot-password", "/reset-password"];
+  const isNoSidebarPage = noSidebarPages.includes(pathname);
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {isLandingPage ? (
-          // Layout khusus untuk landing page tanpa sidebar
+        {isNoSidebarPage ? (
+          // Layout khusus untuk halaman tanpa sidebar (landing page, login, sign-up, dll)
           <div className="overflow-auto">
             {children}
           </div>

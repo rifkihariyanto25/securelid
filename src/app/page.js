@@ -1,10 +1,14 @@
-// Ini adalah server component untuk redirect
-export const dynamic = 'force-dynamic';
+'use client';
 
-import { redirect } from "next/navigation";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Home() {
-  // Redirect ke landing page saat aplikasi pertama kali dijalankan
-  redirect("/landingpage");
-  return null; // Ini tidak akan dirender karena redirect
+  const router = useRouter();
+  
+  useEffect(() => {
+    router.push('/landingpage');
+  }, [router]);
+  
+  return null;
 }
