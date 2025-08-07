@@ -75,23 +75,26 @@ export default function Home() {
             <BacksoundPlayer />
 
             {/* ... KONTEN HALAMAN ... */}
-            <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-blue-600">
+            <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+                <div className="absolute inset-0">
+                    <img src="/Gradient Preview.png" alt="Gradient Background" className="w-full h-full object-cover" />
+                </div>
                 <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#ffffff66_1px,transparent_1px)] [background-size:20px_20px]" />
                 <div className="absolute top-20 right-20 w-40 h-40 rounded-full bg-white/10 blur-3xl"></div>
                 <div className="absolute bottom-10 left-10 w-60 h-60 rounded-full bg-white/10 blur-3xl"></div>
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
                     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex-1 space-y-6">
                         <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter leading-tight">
-                            <span className="block text-white">Yuk, Melek Keamanan Digital Bareng!</span>
-                            <span className="block mt-3 text-white">
+                            <span className="block text-white drop-shadow-lg">Yuk, Melek Keamanan Digital Bareng!</span>
+                            <span className="block mt-3 text-white drop-shadow-lg">
                                 SecuralID
                             </span>
                         </motion.h1>
-                        <motion.p variants={itemVariants} className="text-white max-w-lg mx-auto md:mx-0 text-base md:text-lg">
+                        <motion.p variants={itemVariants} className="text-white drop-shadow-md max-w-lg mx-auto md:mx-0 text-base md:text-lg">
                             SecuralID hadir sebagai komunitas terbuka yang menyebarkan literasi keamanan digital demi menciptakan ruang online yang lebih aman dan inklusif.
                         </motion.p>
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}>
-                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="bg-white text-blue-600 font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all duration-300">
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="bg-white text-blue-600 font-semibold px-8 py-3 rounded-full shadow-xl hover:shadow-2xl hover:bg-blue-50 transition-all duration-300 border-2 border-blue-200">
                                 Jelajahi Artikel
                             </motion.button>
                         </motion.div>
