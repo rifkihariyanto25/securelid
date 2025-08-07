@@ -73,6 +73,7 @@ export default function Home() {
             <Navbar />
             <NaratorPlayer />
             <BacksoundPlayer />
+            <div className="pt-16"> {/* Padding top untuk menghindari tumpang tindih dengan navbar */}
 
             {/* ... KONTEN HALAMAN ... */}
             <section className="relative min-h-[90vh] flex items-center overflow-hidden">
@@ -236,6 +237,7 @@ export default function Home() {
                 />
             </motion.div> */}
 
+            </div> {/* Penutup div padding top */}
             <Footer />
         </div>
     );
