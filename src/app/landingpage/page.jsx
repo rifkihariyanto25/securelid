@@ -8,8 +8,8 @@ import Navbar from '../../components/navbar';
 import Footer from '../../components/footer';
 import NaratorPlayer from '../../components/naratorplayer';
 import BacksoundPlayer from '../../components/backsoundplayer';
-// Temporarily comment out animation import until we fix the path
-// import talkingAnimation from '/animations/talking-animation.json';
+// Import animation file
+import talkingAnimation from '../../animations/Talking Character.json';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -220,14 +220,14 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ANimasi oragng bicara - dinonaktifkan sementara */}
-            {/* <motion.div
-                className="fixed bottom-4 left-4 z-50 w-52 pointer-events-none"
+            {/* Animasi karakter berbicara yang tetap di pojok kanan bawah saat di-scroll */}
+            <motion.div
+                className="fixed bottom-4 right-4 z-50 w-52 pointer-events-none"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
                     delay: 1,
-                    duration: 0.8, // Durasi animasi
+                    duration: 0.8,
                     ease: "easeOut"
                 }}
             >
@@ -235,7 +235,7 @@ export default function Home() {
                     animationData={talkingAnimation}
                     loop={true}
                 />
-            </motion.div> */}
+            </motion.div>
 
             </div> {/* Penutup div padding top */}
             <Footer />
