@@ -1,5 +1,8 @@
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { usePathname } from "next/navigation";
 
 import Header from "../components/header";
 import Sidebar from "../components/sidebar";
@@ -14,24 +17,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "Artikel Management",
-  description: "Aplikasi manajemen artikel",
-};
+// Metadata harus dipindahkan ke file metadata.js terpisah karena "use client" directive
+// tidak kompatibel dengan ekspor metadata
 
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/landingpage";
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <div className="flex flex-col flex-1 overflow-auto">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">
-              {/* Header removed to eliminate Dashboard text */}
-              {children}
+        {isLandingPage ? (
+          // Layout khusus untuk landing page tanpa sidebar
+          <div className="overflow-auto">
+            {children}
+          </div>
+        ) : (
+          // Layout default dengan sidebar untuk halaman admin
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <div className="flex flex-col flex-1 overflow-auto">
+              <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">
+                {/* Header removed to eliminate Dashboard text */}
+                {children}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </body>
     </html>
   );
