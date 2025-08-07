@@ -22,23 +22,33 @@ export default function Navbar() {
           <span className="text-xs font-medium text-gray-400 ml-1.5 align-middle">community</span>
         </motion.h1>
 
-        <ul className="hidden md:flex space-x-8 text-gray-600 font-medium text-sm">
-          {[
-            { label: 'Beranda', href: '/' },
-            { label: 'Artikel', href: '/artikel' },
-            { label: 'Secural ID', href: '/tentang' },
-            { label: 'Hubungi Kami', href: '/hubungi' },
-          ].map(({ label, href }) => (
-            <motion.li
-              key={label}
-              whileHover={{ y: -2 }}
-              className="cursor-pointer hover:text-blue-800 transition-colors duration-200"
-            >
-              <a href={href}>{label}</a>
-            </motion.li>
-          ))}
-
-        </ul>
+        <div className="hidden md:flex items-center space-x-8">
+          <ul className="flex space-x-8 text-gray-600 font-medium text-sm">
+            {[
+              { label: 'Beranda', href: '/' },
+              { label: 'Artikel', href: '/artikel' },
+              { label: 'Tentang Kami', href: '/tentang' },
+              { label: 'Hubungi Kami', href: '/hubungi' },
+            ].map(({ label, href }) => (
+              <motion.li
+                key={label}
+                whileHover={{ y: -2 }}
+                className="cursor-pointer hover:text-blue-800 transition-colors duration-200"
+              >
+                <a href={href}>{label}</a>
+              </motion.li>
+            ))}
+          </ul>
+          
+          <motion.a 
+            href="/artikel"
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }} 
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 inline-block"
+          >
+            Tambah Artikel
+          </motion.a>
+        </div>
 
         <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-gray-600 hover:text-blue-700 transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -56,11 +66,16 @@ export default function Navbar() {
             className="md:hidden px-6 pb-4 border-t border-gray-200/80"
           >
             <ul className="space-y-2 text-gray-600 font-medium mt-4">
-              {['Beranda', 'Artikel', ' Secural ID', 'Hubungi Kami'].map((item) => (
+              {['Beranda', 'Artikel', 'Tentang Kami', 'Hubungi Kami'].map((item) => (
                 <li key={item} className="hover:text-blue-800 cursor-pointer py-2 px-2 rounded-md hover:bg-blue-50 transition-all duration-200">
                   {item}
                 </li>
               ))}
+              <li className="mt-4">
+                <a href="/artikel" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 w-full rounded-md transition-colors duration-200 inline-block text-center">
+                  Tambah Artikel
+                </a>
+              </li>
             </ul>
           </motion.div>
         )}
