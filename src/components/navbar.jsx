@@ -26,7 +26,7 @@ export default function Navbar() {
           <ul className="flex space-x-8 text-gray-600 font-medium text-sm">
             {[
               { label: 'Beranda', href: '/' },
-              { label: 'Artikel', href: '/artikel' },
+              { label: 'Artikel', href: '/artikelpage' },
               { label: 'Tentang Kami', href: '/tentang' },
               { label: 'Hubungi Kami', href: '/hubungi' },
             ].map(({ label, href }) => (
@@ -66,13 +66,18 @@ export default function Navbar() {
             className="md:hidden px-6 pb-4 border-t border-gray-200/80"
           >
             <ul className="space-y-2 text-gray-600 font-medium mt-4">
-              {['Beranda', 'Artikel', 'Tentang Kami', 'Hubungi Kami'].map((item) => (
-                <li key={item} className="hover:text-blue-800 cursor-pointer py-2 px-2 rounded-md hover:bg-blue-50 transition-all duration-200">
-                  {item}
+              {[
+                { label: 'Beranda', href: '/' },
+                { label: 'Artikel', href: '/artikelpage' },
+                { label: 'Tentang Kami', href: '/tentang' },
+                { label: 'Hubungi Kami', href: '/hubungi' },
+              ].map(({ label, href }) => (
+                <li key={label} className="hover:text-blue-800 cursor-pointer py-2 px-2 rounded-md hover:bg-blue-50 transition-all duration-200">
+                  <a href={href}>{label}</a>
                 </li>
               ))}
               <li className="mt-4">
-                <a href="/" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 w-full rounded-md transition-colors duration-200 inline-block text-center">
+                <a href="/login" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 w-full rounded-md transition-colors duration-200 inline-block text-center">
                   Login
                 </a>
               </li>

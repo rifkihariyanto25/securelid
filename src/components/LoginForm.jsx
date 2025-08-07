@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import supabase from '@/lib/supabase';
+import supabase from '../lib/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -18,7 +20,7 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -34,6 +36,9 @@ export default function LoginForm() {
           is_online: true 
         })
         .eq('email', email);
+
+      // Redirect to artikelpage after successful login
+      router.push('/artikelpage');
 
     } catch (error) {
       setError(error.message || 'An error occurred during login');

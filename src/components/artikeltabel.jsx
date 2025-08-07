@@ -11,7 +11,7 @@ import {
     User,
     Loader2
 } from "lucide-react";
-import supabase from "@/lib/supabase";
+import supabase from "../lib/supabase";
 import ArtikelForm from "./artikelform";
 
 const ArtikelTabel = () => {

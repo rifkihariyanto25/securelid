@@ -37,10 +37,10 @@ export default function Footer() {
             <div className="mb-8 md:mb-0 md:w-1/5 text-left">
               <h4 className="text-xl font-semibold text-white mb-6">Navigasi</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Beranda</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Artikel</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Tentang Kami</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Hubungi Kami</a></li>
+                <li><a href="/" className="text-gray-300 hover:text-white transition-colors">Beranda</a></li>
+                <li><a href="/artikelpage" className="text-gray-300 hover:text-white transition-colors">Artikel</a></li>
+                <li><a href="/tentang" className="text-gray-300 hover:text-white transition-colors">Tentang Kami</a></li>
+                <li><a href="/hubungi" className="text-gray-300 hover:text-white transition-colors">Hubungi Kami</a></li>
               </ul>
             </div>
 
