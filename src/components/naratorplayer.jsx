@@ -48,13 +48,6 @@ export default function NaratorPlayer() {
   return (
     <>
       <audio ref={audioRef} src="/music/narasi-web.mp3" loop preload="auto" />
-      <button
-        onClick={togglePlayPause}
-        className="fixed bottom-5 right-5 z-50 bg-white/20 backdrop-blur-md text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
-        aria-label={isPlaying ? "Jeda narasi" : "Putar narasi"}
-      >
-        {isPlaying ? <PauseIcon /> : <PlayIcon />}
-      </button>
     </>
   );
 }
