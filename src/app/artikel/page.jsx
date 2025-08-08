@@ -21,13 +21,12 @@ const Artikel = () => {
         const checkUser = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                
+
                 if (!session) {
-                    // Redirect to login if no session exists
                     router.push('/login');
                     return;
                 }
-                
+
                 setLoading(false);
             } catch (error) {
                 console.error('Error checking authentication:', error);
@@ -37,7 +36,6 @@ const Artikel = () => {
 
         checkUser();
 
-        // Set up auth state listener
         const { data: authListener } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (event === 'SIGNED_OUT') {
@@ -66,11 +64,9 @@ const Artikel = () => {
 
     return (
         <div className="flex-1 overflow-auto relative z-10">
-            <Header />
             <main className="max-w-7xl mx-auto py-4 px-4 lg:px-8">
                 <ArtikelTabel />
             </main>
-            <Footer />
         </div>
     );
 };
