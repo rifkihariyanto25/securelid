@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     Bell,
     Home as House,
@@ -12,6 +12,7 @@ import {
     LogOut,
     Menu
 } from "lucide-react";
+import supabase from "../lib/supabase";
 
 const ICONS = {
     House,
@@ -27,16 +28,57 @@ const Sidebar = () => {
     const [sidebarItems, setSidebarItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [userRole, setUserRole] = useState(null);
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         const fetchSidebarData = async () => {
             try {
                 setIsLoading(true);
+                
+                // Periksa sesi pengguna
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    router.push('/login');
+                    return;
+                }
+                
+                // Ambil role dari localStorage
+                let role = localStorage.getItem('userRole');
+                
+                // Jika tidak ada di localStorage, coba ambil dari database
+                if (!role) {
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('email', session.user.email)
+                        .single();
+                    
+                    role = profileData?.role || 'user';
+                    localStorage.setItem('userRole', role);
+                }
+                
+                setUserRole(role);
+                
+                // Ambil data sidebar
                 const res = await fetch("/data/data.json");
                 if (!res.ok) throw new Error("Failed to fetch data");
                 const data = await res.json();
-                setSidebarItems(data.sidebarItems || []);
+                
+                // Filter menu berdasarkan role
+                let filteredItems;
+                if (role === 'admin') {
+                    // Admin dapat melihat semua menu
+                    filteredItems = data.sidebarItems || [];
+                } else {
+                    // User biasa hanya dapat melihat Beranda, Artikel, dan Logout
+                    filteredItems = (data.sidebarItems || []).filter(item => 
+                        ['Beranda', 'Artikel', 'Logout'].includes(item.name)
+                    );
+                }
+                
+                setSidebarItems(filteredItems);
                 setError(null);
             } catch (err) {
                 console.error("Error loading sidebar data:", err);
@@ -47,13 +89,22 @@ const Sidebar = () => {
         };
 
         fetchSidebarData();
-    }, []);
+    }, [router]);
 
-    const handleItemClick = (item) => {
+    const handleItemClick = async (item) => {
         if (item.name === "Logout") {
-            // Handle logout logic here
-            console.log("Logout clicked");
-            // e.g., clear session, redirect, etc.
+            try {
+                // Logout dari Supabase
+                await supabase.auth.signOut();
+                
+                // Hapus role dari localStorage
+                localStorage.removeItem('userRole');
+                
+                // Redirect ke halaman login
+                router.push('/login');
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
         }
     };
 

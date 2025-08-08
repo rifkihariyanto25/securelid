@@ -20,6 +20,9 @@ export default function LoginForm() {
     setError(null);
 
     try {
+      // Cek apakah email adalah admin
+      const isAdmin = email === 'sagayac697@elobits.com' && password === 'admin123';
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -27,18 +30,24 @@ export default function LoginForm() {
 
       if (error) throw error;
       
-      // If successful, Supabase will handle the session
-      // We'll also update the user's last_login and is_online status
+      // Jika login berhasil, update last_login, is_online, dan role
+      const role = isAdmin ? 'admin' : 'user';
+      
+      // Update profile dengan role
       await supabase
         .from('profiles')
         .update({ 
           last_login: new Date().toISOString(),
-          is_online: true 
+          is_online: true,
+          role: role // Tambahkan role ke profil
         })
         .eq('email', email);
-
-      // Redirect to artikelpage after successful login
-      router.push('/artikelpage');
+      
+      // Simpan role di localStorage untuk digunakan di sidebar
+      localStorage.setItem('userRole', role);
+      
+      // Redirect ke artikel setelah login berhasil
+      router.push('/artikel');
 
     } catch (error) {
       setError(error.message || 'An error occurred during login');
