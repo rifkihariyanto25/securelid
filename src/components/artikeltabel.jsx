@@ -29,18 +29,53 @@ const ArtikelTabel = () => {
     const [formType, setFormType] = useState("add"); // add, edit, view
     const [currentArtikel, setCurrentArtikel] = useState(null);
     
+    // State untuk menyimpan informasi user dan role
+    const [currentUser, setCurrentUser] = useState(null);
+    const [userRole, setUserRole] = useState(null);
+    
     // Fetch artikel from Supabase
     useEffect(() => {
-        fetchArtikel();
+        // Periksa sesi dan role pengguna terlebih dahulu
+        checkUserAndFetchArtikel();
     }, []);
     
-    const fetchArtikel = async () => {
+    const checkUserAndFetchArtikel = async () => {
+        try {
+            // Periksa sesi pengguna
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+            
+            // Simpan informasi user saat ini
+            setCurrentUser(session.user);
+            
+            // Ambil role dari localStorage
+            const role = localStorage.getItem('userRole');
+            setUserRole(role);
+            
+            // Fetch artikel berdasarkan role
+            fetchArtikel(session.user.email, role);
+        } catch (error) {
+            console.error('Error checking user session:', error);
+            setError('Gagal memuat sesi pengguna');
+            setLoading(false);
+        }
+    };
+    
+    const fetchArtikel = async (userEmail, role) => {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+            
+            let query = supabase
                 .from('artikel')
                 .select('*')
                 .order('created_at', { ascending: false });
+            
+            // Jika bukan admin, filter artikel berdasarkan email pengguna
+            if (role !== 'admin') {
+                query = query.eq('penulisartikel', userEmail);
+            }
+            
+            const { data, error } = await query;
                 
             if (error) throw error;
             
@@ -77,14 +112,29 @@ const ArtikelTabel = () => {
 
     const handleEdit = (id) => {
         const artikelToEdit = artikel.find(item => item.idartikel === id);
+        
+        // Cek apakah artikel milik pengguna saat ini (kecuali admin)
+        if (userRole !== 'admin' && artikelToEdit.penulisartikel !== currentUser?.email) {
+            alert("Anda tidak memiliki izin untuk mengedit artikel ini");
+            return;
+        }
+        
         setCurrentArtikel(artikelToEdit);
         setFormType("edit");
         setIsFormOpen(true);
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
-            try {
+        try {
+            // Cek apakah artikel milik pengguna saat ini (kecuali admin)
+            const artikelToDelete = artikel.find(item => item.idartikel === id);
+            
+            if (userRole !== 'admin' && artikelToDelete.penulisartikel !== currentUser?.email) {
+                alert("Anda tidak memiliki izin untuk menghapus artikel ini");
+                return;
+            }
+            
+            if (window.confirm("Apakah Anda yakin ingin menghapus artikel ini?")) {
                 setLoading(true);
                 const { error } = await supabase
                     .from('artikel')
@@ -94,19 +144,21 @@ const ArtikelTabel = () => {
                 if (error) throw error;
                 
                 // Refresh data setelah menghapus
-                fetchArtikel();
+                fetchArtikel(currentUser?.email, userRole);
                 alert("Artikel berhasil dihapus");
-            } catch (error) {
-                console.error('Error deleting artikel:', error);
-                alert("Gagal menghapus artikel");
-            } finally {
-                setLoading(false);
             }
+        } catch (error) {
+            console.error('Error deleting artikel:', error);
+            alert(error.message || "Gagal menghapus artikel");
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleAdd = () => {
-        setCurrentArtikel(null);
+        setCurrentArtikel({
+            penulisartikel: currentUser?.email // Set the current user's email as the author
+        });
         setFormType("add");
         setIsFormOpen(true);
     };
@@ -116,14 +168,25 @@ const ArtikelTabel = () => {
             setLoading(true);
             
             if (formType === "add") {
+                // Pastikan email pengguna saat ini disimpan sebagai penulis
+                const newArticleData = {
+                    ...formData,
+                    penulisartikel: currentUser?.email
+                };
+                
                 // Create new artikel
                 const { error } = await supabase
                     .from('artikel')
-                    .insert([formData]);
+                    .insert([newArticleData]);
                 
                 if (error) throw error;
                 alert("Artikel berhasil ditambahkan");
             } else if (formType === "edit") {
+                // Pastikan pengguna hanya dapat mengedit artikel miliknya sendiri (kecuali admin)
+                if (userRole !== 'admin' && currentArtikel.penulisartikel !== currentUser?.email) {
+                    throw new Error("Anda tidak memiliki izin untuk mengedit artikel ini");
+                }
+                
                 // Update existing artikel
                 const { error } = await supabase
                     .from('artikel')
@@ -136,10 +199,10 @@ const ArtikelTabel = () => {
             
             // Close form and refresh data
             setIsFormOpen(false);
-            fetchArtikel();
+            fetchArtikel(currentUser?.email, userRole);
         } catch (error) {
             console.error('Error submitting artikel:', error);
-            alert("Gagal menyimpan artikel");
+            alert(error.message || "Gagal menyimpan artikel");
         } finally {
             setLoading(false);
         }
@@ -166,7 +229,19 @@ const ArtikelTabel = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    {/* Artikel Management title removed as requested */}
+                    <h2 className="text-xl font-semibold text-[var(--foreground)]">
+                        Manajemen Artikel
+                        {userRole && (
+                            <span className={`ml-2 px-2 py-1 text-xs rounded-full ${userRole === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {userRole === 'admin' ? 'Admin' : 'User'}
+                            </span>
+                        )}
+                    </h2>
+                    <p className="text-sm text-[var(--foreground)]/70 mt-1">
+                        {userRole === 'admin' 
+                            ? 'Anda dapat mengelola semua artikel' 
+                            : 'Anda hanya dapat mengelola artikel yang Anda buat'}
+                    </p>
                 </div>
 
                 <button
@@ -198,7 +273,9 @@ const ArtikelTabel = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-[var(--secondary)] rounded-lg p-4 border border-[var(--border)]">
                     <div className="text-2xl font-bold text-[var(--primary)]">{artikel.length}</div>
-                    <div className="text-sm text-[var(--foreground)]/70">Total Artikel</div>
+                    <div className="text-sm text-[var(--foreground)]/70">
+                        {userRole === 'admin' ? 'Total Artikel' : 'Artikel Anda'}
+                    </div>
                 </div>
             </div>
 
