@@ -24,9 +24,13 @@ export default function AdminPage() {
           return;
         }
 
-        // Ambil role dari localStorage
+        // Ambil role dan email dari localStorage
         const role = localStorage.getItem('userRole');
+        const email = localStorage.getItem('userEmail');
         setUserRole(role);
+        
+        console.log('Admin page - User role:', role);
+        console.log('Admin page - User email:', email);
 
         // Hanya admin yang boleh mengakses halaman ini
         if (role !== 'admin') {

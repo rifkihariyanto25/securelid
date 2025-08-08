@@ -5,9 +5,40 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Fungsi untuk memastikan kolom role ada di tabel profiles
+// Fungsi untuk memastikan kolom role ada di tabel profiles dan super admin terdaftar
 export const ensureRoleColumn = async () => {
   try {
+    console.log('Checking for super admin in database...');
+    // Cek apakah super admin sudah ada di database
+    const { data: superAdminExists, error: superAdminError } = await supabase
+      .from('admin')
+      .select('email')
+      .eq('email', 'rifki10rpl1.2019@gmail.com')
+      .single();
+    
+    console.log('Super admin check result:', superAdminExists, superAdminError);
+    
+    // Jika super admin belum ada, tambahkan
+    if (superAdminError) {
+      console.log('Super admin not found, adding...');
+      const { data: insertData, error: insertError } = await supabase
+        .from('admin')
+        .insert({
+          username: 'rifkihariyanto',
+          email: 'rifki10rpl1.2019@gmail.com',
+          password: 'superadmin-password'
+        })
+        .select();
+      
+      if (!insertError) {
+        console.log('Super admin added successfully:', insertData);
+      } else {
+        console.error('Error adding super admin:', insertError);
+      }
+    } else {
+      console.log('Super admin already exists');
+    }
+    
     // Cek apakah admin sudah ada di database
     const { data: adminExists, error: adminError } = await supabase
       .from('profiles')

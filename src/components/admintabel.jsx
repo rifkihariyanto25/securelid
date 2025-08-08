@@ -1,10 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Plus, Loader2, Shield } from "lucide-react";
 import supabase from "../lib/supabase";
 
 export default function AdminTabel({ admins, loading, error }) {
+  // Cek apakah user adalah super admin
+  const [isSuperAdminState, setIsSuperAdminState] = useState(false);
+  
+  useEffect(() => {
+    // Cek apakah user adalah super admin saat komponen dimount
+    const email = localStorage.getItem('userEmail');
+    console.log('Current user email:', email); // Debugging
+    const isSuper = email === 'rifki10rpl1.2019@gmail.com';
+    console.log('Is super admin:', isSuper); // Debugging
+    setIsSuperAdminState(isSuper);
+  }, []);
+  
+  const isSuperAdmin = () => isSuperAdminState;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formType, setFormType] = useState("add"); // add, edit
   const [currentAdmin, setCurrentAdmin] = useState(null);
@@ -152,19 +165,21 @@ export default function AdminTabel({ admins, loading, error }) {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      {/* Header dengan tombol tambah */}
+      {/* Header dengan tombol tambah (hanya untuk super admin) */}
       <div className="p-4 flex justify-between items-center border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-800 flex items-center">
           <Shield className="w-5 h-5 mr-2 text-purple-600" />
           Daftar Admin
         </h2>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
-        >
-          <Plus size={16} />
-          Tambah Admin
-        </button>
+        {isSuperAdmin() && (
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+          >
+            <Plus size={16} />
+            Tambah Admin
+          </button>
+        )}
       </div>
 
       {/* Tabel Admin */}
@@ -178,9 +193,11 @@ export default function AdminTabel({ admins, loading, error }) {
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Aksi
-              </th>
+              {isSuperAdmin() && (
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Aksi
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -193,24 +210,26 @@ export default function AdminTabel({ admins, loading, error }) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {admin.email}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(admin)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(admin.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+                  {isSuperAdmin() && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(admin)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(admin.id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Hapus"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (

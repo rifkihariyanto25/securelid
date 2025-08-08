@@ -48,8 +48,12 @@ export default function LoginForm() {
         })
         .eq('email', email);
       
-      // Simpan role di localStorage
+      // Simpan role dan email di localStorage
       localStorage.setItem('userRole', role);
+      localStorage.setItem('userEmail', email);
+      
+      console.log('Login successful - Role:', role);
+      console.log('Login successful - Email:', email);
       
       // Redirect berdasarkan role
       if (role === 'admin') {
