@@ -72,9 +72,9 @@ const Sidebar = () => {
                     // Admin dapat melihat semua menu
                     filteredItems = data.sidebarItems || [];
                 } else {
-                    // User biasa hanya dapat melihat Beranda, Artikel, dan Logout
+                    // User biasa dapat melihat Beranda, Artikel, Pengaturan, dan Logout
                     filteredItems = (data.sidebarItems || []).filter(item => 
-                        ['Beranda', 'Artikel', 'Logout'].includes(item.name)
+                        ['Beranda', 'Artikel', 'Pengaturan', 'Logout'].includes(item.name)
                     );
                 }
                 
