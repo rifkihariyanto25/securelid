@@ -61,46 +61,10 @@ const articles = [
 
 export default function ArticlesPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Menghapus state loading dan isAuthenticated karena tidak perlu autentikasi
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          // Jika tidak ada session, tetap tampilkan halaman tapi tandai sebagai tidak terotentikasi
-          setIsAuthenticated(false);
-          setLoading(false);
-          return;
-        }
-        
-        setIsAuthenticated(true);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        router.push('/login');
-      }
-    };
-
-    checkUser();
-
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          router.push('/login');
-        }
-      }
-    );
-
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
-  }, [router]);
+  // Menghapus useEffect untuk pengecekan autentikasi karena tidak diperlukan
 
   if (loading) {
     return (
@@ -117,7 +81,7 @@ export default function ArticlesPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 pt-28 pb-10"> {/* Menambahkan padding top yang lebih besar agar tidak tertutup navbar */}
         <div className="bg-blue-500 text-white rounded-lg p-6 mb-8 text-center">
           <h1 className="text-2xl font-bold mb-2">Semua Artikel</h1>
         </div>

@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   // Halaman yang tidak menampilkan sidebar
-  const noSidebarPages = ["/landingpage", "/", "/login", "/sign-up", "/forgot-password", "/reset-password"];
+  const noSidebarPages = ["/landingpage", "/", "/login", "/sign-up", "/forgot-password", "/reset-password", "/artikelpage", "/artikelpage/1", "/artikelpage/2", "/artikelpage/3", "/artikelpage/4", "/artikelpage/5", "/artikelpage/6"];
   const isNoSidebarPage = noSidebarPages.includes(pathname);
 
   return (

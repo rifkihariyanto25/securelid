@@ -41,47 +41,11 @@ const articles = [
 
 export default function ArticlePage({ params }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Menghapus state loading dan isAuthenticated karena tidak perlu autentikasi
+  const [loading, setLoading] = useState(false);
   const article = articles.find(article => article.id === params.id) || articles[0];
   
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          // Jika tidak ada session, tetap tampilkan halaman tapi tandai sebagai tidak terotentikasi
-          setIsAuthenticated(false);
-          setLoading(false);
-          return;
-        }
-        
-        setIsAuthenticated(true);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        router.push('/login');
-      }
-    };
-
-    checkUser();
-
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          router.push('/login');
-        }
-      }
-    );
-
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
-  }, [router]);
+  // Menghapus useEffect untuk pengecekan autentikasi karena tidak diperlukan
 
   if (loading) {
     return (
@@ -98,48 +62,28 @@ export default function ArticlePage({ params }) {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       
-      <main className="flex-grow container mx-auto px-4 py-8">
-        {isAuthenticated ? (
-          <article className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="relative h-64 w-full">
-              <Image 
-                src={article.imageSrc} 
-                alt={article.title} 
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{article.title}</h1>
-              <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
-                <span>Oleh: {article.author}</span>
-                <span>{article.date}</span>
-              </div>
-              <div 
-                className="prose max-w-none" 
-                dangerouslySetInnerHTML={{ __html: article.content }}
-              />
-            </div>
-          </article>
-        ) : (
-          <div className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto text-center">
-            <div className="mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Login Diperlukan</h2>
-              <p className="text-gray-600 mb-6">Anda perlu login untuk melihat konten artikel.</p>
-              <a 
-                href="/login" 
-                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
-              >
-                Login Sekarang
-              </a>
-            </div>
+      <main className="flex-grow container mx-auto px-4 pt-28 pb-10"> {/* Menambahkan padding top yang lebih besar agar tidak tertutup navbar */}
+        <article className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="relative h-64 w-full">
+            <Image 
+              src={article.imageSrc} 
+              alt={article.title} 
+              fill
+              className="object-cover"
+            />
           </div>
-        )}
+          <div className="p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{article.title}</h1>
+            <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
+              <span>Oleh: {article.author}</span>
+              <span>{article.date}</span>
+            </div>
+            <div 
+              className="prose max-w-none" 
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
+          </div>
+        </article>
       </main>
       
       <Footer />
