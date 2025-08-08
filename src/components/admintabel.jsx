@@ -59,17 +59,17 @@ export default function AdminTabel({ admins, loading, error }) {
     try {
       if (formType === "add") {
         // Validasi input
-        if (!formData.username || !formData.email || !formData.password) {
-          throw new Error("Semua field harus diisi");
+        if (!formData.username || !formData.email) {
+          throw new Error("Username dan email harus diisi");
         }
 
-        // Tambah admin baru
+        // Tambah admin baru (password opsional karena admin login tanpa validasi password)
         const { error } = await supabase
           .from('admin')
           .insert([{
             username: formData.username,
             email: formData.email,
-            password: formData.password
+            password: formData.password || 'default-password' // Password opsional dengan nilai default
           }]);
 
         if (error) throw error;

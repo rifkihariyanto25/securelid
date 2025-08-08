@@ -20,20 +20,19 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      // Login dengan Supabase Auth
+      // Login dengan Supabase Auth terlebih dahulu
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-      
-      // Cek apakah user adalah admin berdasarkan tabel admin
+
+      // Setelah login berhasil, cek apakah user adalah admin
       const { data: adminData, error: adminError } = await supabase
         .from('admin')
         .select('*')
         .eq('email', email)
-        .eq('password', password)
         .single();
       
       // Tentukan role berdasarkan keberadaan di tabel admin
@@ -45,15 +44,20 @@ export default function LoginForm() {
         .update({ 
           last_login: new Date().toISOString(),
           is_online: true,
-          role: role // Tambahkan role ke profil
+          role: role // Set role berdasarkan hasil pengecekan
         })
         .eq('email', email);
       
-      // Simpan role di localStorage untuk digunakan di sidebar
+      // Simpan role di localStorage
       localStorage.setItem('userRole', role);
       
-      // Redirect ke artikel setelah login berhasil
-      router.push('/artikel');
+      // Redirect berdasarkan role
+      if (role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/artikel');
+      }
+
 
     } catch (error) {
       setError(error.message || 'An error occurred during login');
