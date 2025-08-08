@@ -10,7 +10,8 @@ import {
     Users,
     Info,
     LogOut,
-    Menu
+    Menu,
+    Shield
 } from "lucide-react";
 import supabase from "../lib/supabase";
 
@@ -20,7 +21,8 @@ const ICONS = {
     Users,
     Bell,
     Info,
-    LogOut
+    LogOut,
+    Shield
 };
 
 const Sidebar = () => {

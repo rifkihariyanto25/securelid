@@ -20,9 +20,7 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      // Cek apakah email adalah admin
-      const isAdmin = email === 'sagayac697@elobits.com' && password === 'admin123';
-      
+      // Login dengan Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -30,8 +28,16 @@ export default function LoginForm() {
 
       if (error) throw error;
       
-      // Jika login berhasil, update last_login, is_online, dan role
-      const role = isAdmin ? 'admin' : 'user';
+      // Cek apakah user adalah admin berdasarkan tabel admin
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
+      
+      // Tentukan role berdasarkan keberadaan di tabel admin
+      const role = adminData ? 'admin' : 'user';
       
       // Update profile dengan role
       await supabase
