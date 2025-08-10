@@ -9,10 +9,15 @@ import {
     Search,
     Calendar,
     User,
-    Loader2
+    Loader2,
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+    MessageSquare
 } from "lucide-react";
 import supabase from "../lib/supabase";
 import ArtikelForm from "./artikelform";
+import AdminCommentForm from "./admincommentform";
 
 const ArtikelTabel = () => {
     const [artikel, setArtikel] = useState([]);
@@ -33,11 +38,24 @@ const ArtikelTabel = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
     
+    // State untuk form komentar admin
+    const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
+    const [currentArtikelId, setCurrentArtikelId] = useState(null);
+    const [adminId, setAdminId] = useState(null);
+    const [adminComments, setAdminComments] = useState({});
+    
     // Fetch artikel from Supabase
     useEffect(() => {
         // Periksa sesi dan role pengguna terlebih dahulu
         checkUserAndFetchArtikel();
     }, []);
+    
+    // Fetch admin comments for rejected articles
+    useEffect(() => {
+        if (artikel.length > 0) {
+            fetchAdminComments();
+        }
+    }, [artikel]);
     
     const checkUserAndFetchArtikel = async () => {
         try {
@@ -80,6 +98,19 @@ const ArtikelTabel = () => {
             if (error) throw error;
             
             setArtikel(data || []);
+            
+            // Jika admin, ambil ID admin untuk digunakan saat membuat komentar
+            if (role === 'admin') {
+                const { data: adminData, error: adminError } = await supabase
+                    .from('admin')
+                    .select('id')
+                    .eq('email', userEmail)
+                    .single();
+                
+                if (!adminError && adminData) {
+                    setAdminId(adminData.id);
+                }
+            }
         } catch (error) {
             console.error('Error fetching artikel:', error);
             setError('Gagal memuat data artikel');
@@ -87,14 +118,39 @@ const ArtikelTabel = () => {
             setLoading(false);
         }
     };
+    
+    // Fetch admin comments for articles
+    const fetchAdminComments = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('admin_comment')
+                .select('*');
+            
+            if (error) throw error;
+            
+            // Organize comments by artikel_id
+            const commentsByArticle = {};
+            data.forEach(comment => {
+                commentsByArticle[comment.artikel_id] = comment;
+            });
+            
+            setAdminComments(commentsByArticle);
+        } catch (error) {
+            console.error('Error fetching admin comments:', error);
+        }
+    };
 
     // Filter dan search logic
     const filteredArtikel = artikel.filter(item => {
-        const matchesSearch = 
-            (item.titleartikel && item.titleartikel.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.penulisartikel && item.penulisartikel.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchesFilter = filterStatus === "All" || item.status === filterStatus;
-        return matchesSearch && matchesFilter;
+        const searchMatch = (
+            item.titleartikel?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.penulisartikel?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.kontenartikel?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        const statusMatch = filterStatus === "All" || item.artikel_status === filterStatus;
+        
+        return searchMatch && statusMatch;
     });
 
     // Pagination logic
@@ -212,15 +268,95 @@ const ArtikelTabel = () => {
         setIsFormOpen(false);
         setCurrentArtikel(null);
     };
+    
+    // Fungsi untuk menangani perubahan status artikel
+    const handleChangeStatus = async (artikelId, newStatus) => {
+        try {
+            setLoading(true);
+            
+            const { error } = await supabase
+                .from('artikel')
+                .update({ artikel_status: newStatus })
+                .eq('idartikel', artikelId);
+            
+            if (error) throw error;
+            
+            // Refresh data setelah mengubah status
+            fetchArtikel(currentUser?.email, userRole);
+            alert(`Status artikel berhasil diubah menjadi ${getStatusText(newStatus)}`);
+        } catch (error) {
+            console.error('Error changing article status:', error);
+            alert(error.message || "Gagal mengubah status artikel");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // Fungsi untuk menolak artikel dan menambahkan komentar
+    const handleRejectArticle = (artikelId) => {
+        setCurrentArtikelId(artikelId);
+        setIsCommentFormOpen(true);
+    };
+    
+    // Fungsi untuk melihat komentar penolakan
+    const handleViewComment = async (artikelId) => {
+        try {
+            const comment = adminComments[artikelId];
+            if (comment) {
+                alert(`Alasan Penolakan: ${comment.comment}`);
+            } else {
+                alert("Tidak ada komentar penolakan untuk artikel ini");
+            }
+        } catch (error) {
+            console.error('Error viewing comment:', error);
+            alert("Gagal melihat komentar");
+        }
+    };
+    
+    // Fungsi untuk menangani submit form komentar
+    const handleCommentSubmit = async () => {
+        // Refresh data setelah menambahkan komentar
+        fetchArtikel(currentUser?.email, userRole);
+        fetchAdminComments();
+    };
+    
+    // Fungsi untuk menutup form komentar
+    const handleCloseCommentForm = () => {
+        setIsCommentFormOpen(false);
+        setCurrentArtikelId(null);
+    };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case "Published":
-                return "bg-green-500/20 text-green-400 border-green-500/30";
-            case "Draft":
-                return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+            case "published":
+                return "bg-green-500/20 text-green-500 border-green-500/30";
+            case "approved":
+                return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+            case "reviewed":
+                return "bg-indigo-500/20 text-indigo-500 border-indigo-500/30";
+            case "pending":
+                return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
+            case "rejected":
+                return "bg-red-500/20 text-red-500 border-red-500/30";
             default:
-                return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+                return "bg-gray-500/20 text-gray-500 border-gray-500/30";
+        }
+    };
+    
+    const getStatusText = (status) => {
+        switch (status) {
+            case "published":
+                return "Dipublikasikan";
+            case "approved":
+                return "Disetujui";
+            case "reviewed":
+                return "Ditinjau";
+            case "pending":
+                return "Menunggu";
+            case "rejected":
+                return "Ditolak";
+            default:
+                return "Tidak diketahui";
         }
     };
 
@@ -266,7 +402,22 @@ const ArtikelTabel = () => {
                         className="w-full bg-[var(--secondary)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-[var(--foreground)] placeholder-[var(--foreground)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
                     />
                 </div>
-
+                
+                {/* Status Filter */}
+                <div className="w-full md:w-auto">
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full bg-[var(--secondary)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                    >
+                        <option value="All">Semua Status</option>
+                        <option value="pending">Menunggu</option>
+                        <option value="reviewed">Ditinjau</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                        <option value="published">Dipublikasikan</option>
+                    </select>
+                </div>
             </div>
 
             {/* Stats */}
@@ -305,6 +456,7 @@ const ArtikelTabel = () => {
                                 <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold hidden md:table-cell">Penulis</th>
                                 <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold hidden lg:table-cell">Konten Artikel</th>
                                 <th className="text-left py-4 px-2 text-[var(--foreground)] font-semibold hidden md:table-cell">Tanggal</th>
+                                <th className="text-center py-4 px-2 text-[var(--foreground)] font-semibold">Status</th>
                                 <th className="text-center py-4 px-2 text-[var(--foreground)] font-semibold">Actions</th>
                             </tr>
                         </thead>
@@ -348,26 +500,93 @@ const ArtikelTabel = () => {
                                         </div>
                                     </td>
 
+                                    <td className="py-4 px-2 text-center">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.artikel_status)}`}>
+                                            {getStatusText(item.artikel_status)}
+                                        </span>
+                                    </td>
+
                                     <td className="py-4 px-2">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
                                                 onClick={() => handleView(item.idartikel)}
                                                 className="p-2 text-[var(--primary)] hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                title="View"
+                                                title="Lihat"
                                             >
                                                 <Eye size={16} />
                                             </button>
-                                            <button
-                                                onClick={() => handleEdit(item.idartikel)}
-                                                className="p-2 text-amber-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                title="Edit"
-                                            >
-                                                <Edit size={16} />
-                                            </button>
+                                            
+                                            {/* Admin actions for article status */}
+                                            {userRole === 'admin' && (
+                                                <>
+                                                    {item.artikel_status === 'pending' && (
+                                                        <button
+                                                            onClick={() => handleChangeStatus(item.idartikel, 'reviewed')}
+                                                            className="p-2 text-indigo-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                            title="Tandai sebagai Ditinjau"
+                                                        >
+                                                            <AlertCircle size={16} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {(item.artikel_status === 'pending' || item.artikel_status === 'reviewed') && (
+                                                        <button
+                                                            onClick={() => handleChangeStatus(item.idartikel, 'approved')}
+                                                            className="p-2 text-blue-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                            title="Setujui Artikel"
+                                                        >
+                                                            <CheckCircle size={16} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {item.artikel_status === 'approved' && (
+                                                        <button
+                                                            onClick={() => handleChangeStatus(item.idartikel, 'published')}
+                                                            className="p-2 text-green-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                            title="Publikasikan Artikel"
+                                                        >
+                                                            <CheckCircle size={16} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {(item.artikel_status === 'pending' || item.artikel_status === 'reviewed') && (
+                                                        <button
+                                                            onClick={() => handleRejectArticle(item.idartikel)}
+                                                            className="p-2 text-red-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                            title="Tolak Artikel"
+                                                        >
+                                                            <XCircle size={16} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {item.artikel_status === 'rejected' && adminComments[item.idartikel] && (
+                                                        <button
+                                                            onClick={() => handleViewComment(item.idartikel)}
+                                                            className="p-2 text-purple-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                            title="Lihat Komentar"
+                                                        >
+                                                            <MessageSquare size={16} />
+                                                        </button>
+                                                    )}
+                                                </>
+                                            )}
+                                            
+                                            {/* Edit button - only for pending articles or admin */}
+                                            {(userRole === 'admin' || item.artikel_status === 'pending' || item.artikel_status === 'rejected') && (
+                                                <button
+                                                    onClick={() => handleEdit(item.idartikel)}
+                                                    className="p-2 text-amber-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
+                                                    title="Edit"
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                            )}
+                                            
+                                            {/* Delete button */}
                                             <button
                                                 onClick={() => handleDelete(item.idartikel)}
                                                 className="p-2 text-red-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                title="Delete"
+                                                title="Hapus"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -376,7 +595,7 @@ const ArtikelTabel = () => {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="7" className="py-12 text-center">
+                                    <td colSpan="8" className="py-12 text-center">
                                         <div className="text-[var(--foreground)]/70">
                                             <div className="text-lg mb-2">Tidak ada data artikel</div>
                                             <div className="text-sm">Coba ubah filter atau tambah artikel baru</div>
@@ -431,14 +650,26 @@ const ArtikelTabel = () => {
                 </div>
             )}
             
-            {/* Form Popup */}
+            {/* Form */}
             {isFormOpen && (
-                <ArtikelForm 
+                <ArtikelForm
                     isOpen={isFormOpen}
                     onClose={handleCloseForm}
                     artikel={currentArtikel}
                     onSubmit={handleFormSubmit}
                     formType={formType}
+                />
+            )}
+            
+            {/* Admin Comment Form */}
+            {isCommentFormOpen && (
+                <AdminCommentForm
+                    isOpen={isCommentFormOpen}
+                    onClose={handleCloseCommentForm}
+                    artikelId={currentArtikelId}
+                    adminId={adminId}
+                    onSubmit={handleCommentSubmit}
+                    existingComment={adminComments[currentArtikelId]}
                 />
             )}
         </div>

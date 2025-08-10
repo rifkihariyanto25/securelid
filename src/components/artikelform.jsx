@@ -7,7 +7,8 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add" }) =
     const [formData, setFormData] = useState({
         titleartikel: "",
         kontenartikel: "",
-        penulisartikel: ""
+        penulisartikel: "",
+        artikel_status: "pending"
     });
 
     useEffect(() => {
@@ -15,13 +16,15 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add" }) =
             setFormData({
                 titleartikel: artikel.titleartikel || "",
                 kontenartikel: artikel.kontenartikel || "",
-                penulisartikel: artikel.penulisartikel || ""
+                penulisartikel: artikel.penulisartikel || "",
+                artikel_status: artikel.artikel_status || "pending"
             });
         } else {
             setFormData({
                 titleartikel: "",
                 kontenartikel: "",
-                penulisartikel: ""
+                penulisartikel: "",
+                artikel_status: "pending"
             });
         }
     }, [artikel, formType]);
