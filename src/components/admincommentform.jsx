@@ -27,6 +27,18 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
                 throw new Error("Komentar tidak boleh kosong");
             }
 
+            if (!adminId) {
+                console.error('Admin ID is missing:', { adminId });
+                throw new Error("ID Admin tidak ditemukan. Silakan refresh halaman dan coba lagi.");
+            }
+
+            if (!artikelId) {
+                console.error('Artikel ID is missing:', { artikelId });
+                throw new Error("ID Artikel tidak ditemukan. Silakan refresh halaman dan coba lagi.");
+            }
+
+            console.log('Submitting comment with:', { artikelId, adminId, comment });
+
             if (existingComment) {
                 // Update existing comment
                 const { error } = await supabase
@@ -34,33 +46,101 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
                     .update({ comment })
                     .eq('id', existingComment.id);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Error updating comment:', error);
+                    // Handle empty error object case
+                    const errorDetails = Object.keys(error).length === 0 ? 'Terjadi kesalahan tidak diketahui' : (error.message || JSON.stringify(error));
+                    throw new Error(`Gagal memperbarui komentar: ${errorDetails}`);
+                }
             } else {
                 // Create new comment
-                const { error } = await supabase
+                // Pastikan artikel_id dan admin_id adalah tipe data yang benar (bigint)
+                const artikel_id = parseInt(artikelId, 10);
+                const admin_id = parseInt(adminId, 10);
+                
+                // Add more detailed logging
+                console.log('Inserting comment with parsed IDs:', { 
+                    artikel_id, 
+                    admin_id, 
+                    comment,
+                    artikelId_type: typeof artikelId,
+                    adminId_type: typeof adminId,
+                    artikelId_raw: artikelId,
+                    adminId_raw: adminId,
+                    isNaN_artikel_id: isNaN(artikel_id),
+                    isNaN_admin_id: isNaN(admin_id)
+                });
+                
+                // Check for invalid IDs
+                if (isNaN(artikel_id)) {
+                    throw new Error(`ID Artikel tidak valid: ${artikelId}`);
+                }
+                
+                if (isNaN(admin_id)) {
+                    throw new Error(`ID Admin tidak valid: ${adminId}`);
+                }
+                
+                const { data, error } = await supabase
                     .from('admin_comment')
                     .insert([{
-                        artikel_id: artikelId,
-                        admin_id: adminId,
+                        artikel_id: artikel_id,
+                        admin_id: admin_id,
                         comment
                     }]);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Error inserting comment:', error);
+                    // Handle empty error object case
+                    const errorDetails = Object.keys(error).length === 0 ? 'Terjadi kesalahan tidak diketahui' : (error.message || JSON.stringify(error));
+                    throw new Error(`Gagal menyimpan komentar: ${errorDetails}`);
+                }
+                console.log('Comment inserted successfully:', data);
             }
 
             // Update artikel status to rejected
+            // Pastikan idartikel adalah tipe data yang benar (bigint)
+            const idartikel = parseInt(artikelId, 10);
+            console.log('Updating artikel status with parsed ID:', { 
+                idartikel, 
+                artikelId_raw: artikelId,
+                isNaN_idartikel: isNaN(idartikel) 
+            });
+            
+            // Check for invalid ID
+            if (isNaN(idartikel)) {
+                throw new Error(`ID Artikel tidak valid untuk update status: ${artikelId}`);
+            }
+            
             const { error: artikelError } = await supabase
                 .from('artikel')
                 .update({ artikel_status: 'rejected' })
-                .eq('idartikel', artikelId);
+                .eq('idartikel', idartikel);
 
-            if (artikelError) throw artikelError;
+            if (artikelError) {
+                console.error('Error updating artikel status:', artikelError);
+                // Handle empty error object case
+                const errorDetails = Object.keys(artikelError).length === 0 ? 'Terjadi kesalahan tidak diketahui' : (artikelError.message || JSON.stringify(artikelError));
+                throw new Error(`Gagal mengubah status artikel: ${errorDetails}`);
+            }
 
+            console.log('Article status updated successfully');
             onSubmit && onSubmit();
             onClose();
         } catch (error) {
             console.error('Error submitting comment:', error);
-            setError(error.message);
+            // Pastikan error ditampilkan dengan benar
+            let errorMessage;
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (typeof error === 'object') {
+                // Handle empty object case
+                errorMessage = Object.keys(error).length === 0 
+                    ? 'Terjadi kesalahan tidak diketahui' 
+                    : JSON.stringify(error);
+            } else {
+                errorMessage = "Terjadi kesalahan saat menolak artikel";
+            }
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

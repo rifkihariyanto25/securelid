@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, CheckCircle, XCircle, AlertCircle, MessageSquare } from "lucide-react";
 
-const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add" }) => {
+const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", userRole, onChangeStatus, onRejectArticle, onViewComment, adminComments }) => {
     const [formData, setFormData] = useState({
         titleartikel: "",
         kontenartikel: "",
@@ -63,6 +63,106 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add" }) =
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-4">
+                    {formType === "view" && artikel && (
+                         <div className="mb-4 p-3 border rounded-lg bg-gray-50">
+                             <div className="flex items-center mb-2">
+                                 <span className="text-sm font-medium mr-2">Status:</span>
+                                 {artikel.artikel_status === "published" && (
+                                     <span className="flex items-center text-green-600 text-sm">
+                                         <CheckCircle size={16} className="mr-1" /> Dipublikasikan
+                                     </span>
+                                 )}
+                                 {artikel.artikel_status === "approved" && (
+                                     <span className="flex items-center text-blue-600 text-sm">
+                                         <CheckCircle size={16} className="mr-1" /> Disetujui
+                                     </span>
+                                 )}
+                                 {artikel.artikel_status === "reviewed" && (
+                                     <span className="flex items-center text-indigo-600 text-sm">
+                                         <AlertCircle size={16} className="mr-1" /> Ditinjau
+                                     </span>
+                                 )}
+                                 {artikel.artikel_status === "rejected" && (
+                                     <span className="flex items-center text-red-600 text-sm">
+                                         <XCircle size={16} className="mr-1" /> Ditolak
+                                     </span>
+                                 )}
+                                 {artikel.artikel_status === "pending" && (
+                                     <span className="flex items-center text-amber-600 text-sm">
+                                         <AlertCircle size={16} className="mr-1" /> Menunggu
+                                     </span>
+                                 )}
+                             </div>
+                             {userRole === "admin" && (
+                                 <div className="flex flex-wrap gap-2 mt-2">
+                                     {artikel.artikel_status === "pending" && (
+                                         <>
+                                             <button
+                                                 type="button"
+                                                 onClick={() => onChangeStatus(artikel.idartikel, "reviewed")}
+                                                 className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md text-xs hover:bg-indigo-200"
+                                             >
+                                                 Tandai Ditinjau
+                                             </button>
+                                             <button
+                                                 type="button"
+                                                 onClick={() => onChangeStatus(artikel.idartikel, "approved")}
+                                                 className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200"
+                                             >
+                                                 Setujui
+                                             </button>
+                                             <button
+                                                 type="button"
+                                                 onClick={() => onRejectArticle(artikel.idartikel)}
+                                                 className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs hover:bg-red-200"
+                                             >
+                                                 Tolak
+                                             </button>
+                                         </>
+                                     )}
+                                     {artikel.artikel_status === "reviewed" && (
+                                         <>
+                                             <button
+                                                 type="button"
+                                                 onClick={() => onChangeStatus(artikel.idartikel, "approved")}
+                                                 className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200"
+                                             >
+                                                 Setujui
+                                             </button>
+                                             <button
+                                                 type="button"
+                                                 onClick={() => onRejectArticle(artikel.idartikel)}
+                                                 className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs hover:bg-red-200"
+                                             >
+                                                 Tolak
+                                             </button>
+                                         </>
+                                     )}
+                                     {artikel.artikel_status === "approved" && (
+                                         <button
+                                             type="button"
+                                             onClick={() => onChangeStatus(artikel.idartikel, "published")}
+                                             className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs hover:bg-green-200"
+                                         >
+                                             Publikasikan
+                                         </button>
+                                     )}
+                                 </div>
+                             )}
+                             {artikel.artikel_status === "rejected" && adminComments && adminComments[artikel.idartikel] && (
+                                 <div className="mt-2">
+                                     <button
+                                         type="button"
+                                         onClick={() => onViewComment(artikel.idartikel)}
+                                         className="flex items-center text-blue-600 text-xs hover:underline"
+                                     >
+                                         <MessageSquare size={14} className="mr-1" />
+                                         Lihat Alasan Penolakan
+                                     </button>
+                                 </div>
+                             )}
+                         </div>
+                     )}
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="titleartikel" className="block text-sm font-medium text-[var(--foreground)] mb-1">

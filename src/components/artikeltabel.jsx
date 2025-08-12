@@ -109,6 +109,9 @@ const ArtikelTabel = () => {
                 
                 if (!adminError && adminData) {
                     setAdminId(adminData.id);
+                    console.log('Admin ID set:', adminData.id);
+                } else {
+                    console.error('Error fetching admin ID:', adminError);
                 }
             }
         } catch (error) {
@@ -161,9 +164,11 @@ const ArtikelTabel = () => {
     // CRUD Actions
     const handleView = (id) => {
         const artikelToView = artikel.find(item => item.idartikel === id);
-        setCurrentArtikel(artikelToView);
-        setFormType("view");
-        setIsFormOpen(true);
+        if (artikelToView) {
+            setCurrentArtikel(artikelToView);
+            setFormType("view");
+            setIsFormOpen(true);
+        }
     };
 
     const handleEdit = (id) => {
@@ -293,9 +298,57 @@ const ArtikelTabel = () => {
     };
     
     // Fungsi untuk menolak artikel dan menambahkan komentar
-    const handleRejectArticle = (artikelId) => {
-        setCurrentArtikelId(artikelId);
-        setIsCommentFormOpen(true);
+    const handleRejectArticle = async (artikelId) => {
+        try {
+            console.log('Starting handleRejectArticle with:', { artikelId, adminId, userRole });
+            
+            // Pastikan adminId tersedia
+            if (!adminId && userRole === 'admin') {
+                console.log('Admin ID not found, fetching again...');
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    console.log('Session found:', { userEmail: session.user.email });
+                    
+                    const { data: adminData, error: adminError } = await supabase
+                        .from('admin')
+                        .select('id')
+                        .eq('email', session.user.email)
+                        .single();
+                    
+                    if (adminError) {
+                        console.error('Error fetching admin ID:', adminError);
+                        throw new Error(`Gagal mendapatkan ID admin: ${adminError.message || JSON.stringify(adminError)}`);
+                    }
+                    
+                    if (adminData) {
+                        console.log('Admin data found:', adminData);
+                        // Ensure adminId is a number
+                        const adminIdValue = typeof adminData.id === 'string' ? parseInt(adminData.id, 10) : adminData.id;
+                        setAdminId(adminIdValue);
+                        console.log('Admin ID set:', adminIdValue);
+                    } else {
+                        console.error('Admin data not found for email:', session.user.email);
+                        throw new Error('Data admin tidak ditemukan. Silakan refresh halaman dan coba lagi.');
+                    }
+                } else {
+                    console.error('No session found');
+                    throw new Error('Sesi pengguna tidak ditemukan. Silakan login kembali.');
+                }
+            }
+            
+            // Tambahkan pengecekan final untuk adminId
+            if (!adminId && userRole === 'admin') {
+                console.error('Admin ID still not available after fetch attempt');
+                throw new Error('ID Admin masih tidak tersedia. Silakan refresh halaman dan coba lagi.');
+            }
+            
+            console.log('Opening comment form with:', { currentArtikelId: artikelId, adminId });
+            setCurrentArtikelId(artikelId);
+            setIsCommentFormOpen(true);
+        } catch (error) {
+            console.error('Error preparing rejection form:', error);
+            alert(error.message || 'Terjadi kesalahan saat menyiapkan form penolakan');
+        }
     };
     
     // Fungsi untuk melihat komentar penolakan
@@ -315,9 +368,39 @@ const ArtikelTabel = () => {
     
     // Fungsi untuk menangani submit form komentar
     const handleCommentSubmit = async () => {
-        // Refresh data setelah menambahkan komentar
-        fetchArtikel(currentUser?.email, userRole);
-        fetchAdminComments();
+        try {
+            // Refresh data setelah menambahkan komentar
+            console.log('Refreshing data after comment submission');
+            await fetchArtikel(currentUser?.email, userRole);
+            await fetchAdminComments();
+            alert("Artikel berhasil ditolak");
+        } catch (error) {
+            console.error('Error after submitting comment:', error);
+            
+            // Log detailed error information
+            if (typeof error === 'object') {
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name,
+                    code: error.code,
+                    isEmpty: Object.keys(error).length === 0
+                });
+            }
+            
+            // Tetap tampilkan pesan sukses karena penolakan artikel berhasil
+            // meskipun ada error saat refresh data
+            alert("Artikel berhasil ditolak");
+            
+            // Coba refresh data lagi setelah beberapa detik
+            setTimeout(() => {
+                console.log('Attempting to re-fetch data after delay');
+                fetchArtikel(currentUser?.email, userRole)
+                    .catch(e => console.error('Error re-fetching artikel:', e));
+                fetchAdminComments()
+                    .catch(e => console.error('Error re-fetching comments:', e));
+            }, 2000);
+        }
     };
     
     // Fungsi untuk menutup form komentar
@@ -516,61 +599,6 @@ const ArtikelTabel = () => {
                                                 <Eye size={16} />
                                             </button>
                                             
-                                            {/* Admin actions for article status */}
-                                            {userRole === 'admin' && (
-                                                <>
-                                                    {item.artikel_status === 'pending' && (
-                                                        <button
-                                                            onClick={() => handleChangeStatus(item.idartikel, 'reviewed')}
-                                                            className="p-2 text-indigo-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                            title="Tandai sebagai Ditinjau"
-                                                        >
-                                                            <AlertCircle size={16} />
-                                                        </button>
-                                                    )}
-                                                    
-                                                    {(item.artikel_status === 'pending' || item.artikel_status === 'reviewed') && (
-                                                        <button
-                                                            onClick={() => handleChangeStatus(item.idartikel, 'approved')}
-                                                            className="p-2 text-blue-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                            title="Setujui Artikel"
-                                                        >
-                                                            <CheckCircle size={16} />
-                                                        </button>
-                                                    )}
-                                                    
-                                                    {item.artikel_status === 'approved' && (
-                                                        <button
-                                                            onClick={() => handleChangeStatus(item.idartikel, 'published')}
-                                                            className="p-2 text-green-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                            title="Publikasikan Artikel"
-                                                        >
-                                                            <CheckCircle size={16} />
-                                                        </button>
-                                                    )}
-                                                    
-                                                    {(item.artikel_status === 'pending' || item.artikel_status === 'reviewed') && (
-                                                        <button
-                                                            onClick={() => handleRejectArticle(item.idartikel)}
-                                                            className="p-2 text-red-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                            title="Tolak Artikel"
-                                                        >
-                                                            <XCircle size={16} />
-                                                        </button>
-                                                    )}
-                                                    
-                                                    {item.artikel_status === 'rejected' && adminComments[item.idartikel] && (
-                                                        <button
-                                                            onClick={() => handleViewComment(item.idartikel)}
-                                                            className="p-2 text-purple-500 hover:bg-[var(--secondary)] rounded-lg transition-colors duration-200"
-                                                            title="Lihat Komentar"
-                                                        >
-                                                            <MessageSquare size={16} />
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-                                            
                                             {/* Edit button - only for pending articles or admin */}
                                             {(userRole === 'admin' || item.artikel_status === 'pending' || item.artikel_status === 'rejected') && (
                                                 <button
@@ -650,7 +678,7 @@ const ArtikelTabel = () => {
                 </div>
             )}
             
-            {/* Form */}
+            {/* Form Modal */}
             {isFormOpen && (
                 <ArtikelForm
                     isOpen={isFormOpen}
@@ -658,6 +686,11 @@ const ArtikelTabel = () => {
                     artikel={currentArtikel}
                     onSubmit={handleFormSubmit}
                     formType={formType}
+                    userRole={userRole}
+                    onChangeStatus={handleChangeStatus}
+                    onRejectArticle={handleRejectArticle}
+                    onViewComment={handleViewComment}
+                    adminComments={adminComments}
                 />
             )}
             
