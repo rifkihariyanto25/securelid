@@ -8,63 +8,40 @@ import ArticleCard from '../../components/ArticleCard';
 import supabase from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 
-const articles = [
-  {
-    id: '1',
-    title: 'Cara Mengenali dan Menghindari Email Phishing Seperti Profesional',
-    excerpt: 'Pelajari teknik-teknik untuk mengenali ciri-ciri email phishing dan langkah-langkah untuk melindungi diri Anda.',
-    date: '28 Juli 2023',
-    author: 'Tim Keamanan',
-    imageSrc: '/phishing.svg'
-  },
-  {
-    id: '2',
-    title: 'Cara Mengenali dan Menghindari Email Phishing Seperti Profesional',
-    excerpt: 'Pelajari teknik-teknik untuk mengenali ciri-ciri email phishing yang canggih dan langkah-langkah untuk melindungi diri Anda.',
-    date: '25 Juli 2023',
-    author: 'Tim Keamanan',
-    imageSrc: '/phishing.svg'
-  },
-  {
-    id: '3',
-    title: 'Cara Mengenali dan Menghindari Email Phishing Seperti Profesional',
-    excerpt: 'Pelajari teknik-teknik untuk mengenali ciri-ciri email phishing yang canggih dan langkah-langkah untuk melindungi diri Anda.',
-    date: '23 Juli 2023',
-    author: 'Tim Keamanan',
-    imageSrc: '/phishing.svg'
-  },
-  {
-    id: '4',
-    title: 'Cara Mengenali dan Menghindari Email Phishing Seperti Profesional',
-    excerpt: 'Pelajari teknik-teknik untuk mengenali ciri-ciri email phishing yang canggih dan langkah-langkah untuk melindungi diri Anda.',
-    date: '21 Juli 2023',
-    author: 'Tim Keamanan',
-    imageSrc: '/phishing.svg'
-  },
-  {
-    id: '5',
-    title: 'Cara Mengenali dan Menghindari Email Phishing Seperti Profesional',
-    excerpt: 'Pelajari teknik-teknik untuk mengenali ciri-ciri email phishing yang canggih dan langkah-langkah untuk melindungi diri Anda.',
-    date: '20 Juli 2023',
-    author: 'Tim Keamanan',
-    imageSrc: '/phishing.svg'
-  },
-  {
-    id: '6',
-    title: 'Cara Mengenali dan Menghindari Email Phishing Seperti Profesional',
-    excerpt: 'Pelajari teknik-teknik untuk mengenali ciri-ciri email phishing yang canggih dan langkah-langkah untuk melindungi diri Anda.',
-    date: '19 Juli 2023',
-    author: 'Tim Keamanan',
-    imageSrc: '/phishing.svg'
-  },
-];
-
 export default function ArticlesPage() {
   const router = useRouter();
-  // Menghapus state loading dan isAuthenticated karena tidak perlu autentikasi
-  const [loading, setLoading] = useState(false);
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Menghapus useEffect untuk pengecekan autentikasi karena tidak diperlukan
+  // Fetch articles from database
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+
+      // Hanya ambil artikel yang statusnya 'approved' atau 'published'
+      const { data, error } = await supabase
+        .from('artikel')
+        .select('*')
+        .in('artikel_status', ['approved', 'published'])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setArticles(data || []);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+      setError('Gagal memuat artikel');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -77,30 +54,66 @@ export default function ArticlesPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Navbar />
+        <main className="flex-grow container mx-auto px-4 pt-28 pb-10">
+          <div className="text-center">
+            <p className="text-red-600 text-lg">{error}</p>
+            <button
+              onClick={fetchArticles}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      
-      <main className="flex-grow container mx-auto px-4 pt-28 pb-10"> {/* Menambahkan padding top yang lebih besar agar tidak tertutup navbar */}
+
+      <main className="flex-grow container mx-auto px-4 pt-28 pb-10">
         <div className="bg-blue-500 text-white rounded-lg p-6 mb-8 text-center">
           <h1 className="text-2xl font-bold mb-2">Semua Artikel</h1>
+          <p className="text-blue-100">
+            {articles.length} artikel tersedia
+          </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article) => (
-            <ArticleCard 
-              key={article.id}
-              id={article.id}
-              title={article.title}
-              excerpt={article.excerpt}
-              date={article.date}
-              author={article.author}
-              imageSrc={article.imageSrc}
-            />
-          ))}
-        </div>
+
+        {articles.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Belum ada artikel yang dipublikasikan</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articles.map((article) => (
+              <ArticleCard
+                key={article.idartikel}
+                id={article.idartikel}
+                title={article.titleartikel}
+                excerpt={article.kontenartikel ?
+                  article.kontenartikel.substring(0, 150) + '...' :
+                  'Tidak ada excerpt'
+                }
+                date={new Date(article.created_at).toLocaleDateString('id-ID', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+                author={article.penulisartikel || 'Anonim'}
+                imageSrc="/phishing.svg" // Default image, bisa disesuaikan
+              />
+            ))}
+          </div>
+        )}
       </main>
-      
+
       <Footer />
     </div>
   );
