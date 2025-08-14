@@ -12,6 +12,10 @@ const nextConfig = {
       }]
     });
     return config;
+  },
+  // Menonaktifkan telemetri Next.js
+  experimental: {
+    disableOptimizedLoading: true
   }
 };
 

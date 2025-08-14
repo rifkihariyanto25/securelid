@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import supabase from '../../lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -64,19 +65,53 @@ export default function SignUp() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Account Created!</h2>
-            <p className="mt-2 text-gray-600">Your account has been successfully created.</p>
+      <div className="flex min-h-screen w-full">
+        {/* Left side - Indonesian Cultural Background */}
+        <div className="hidden lg:flex w-1/2 relative">
+          <Image
+            src="/background.png"
+            alt="Indonesian Cultural Background"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Logo overlay */}
+          <div className="absolute top-8 left-8 z-10">
+            <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
+              <h2 className="text-xl font-bold text-gray-800">
+                Secura<span className="text-blue-600">ID</span>
+              </h2>
+            </div>
           </div>
-          <div className="mt-6">
-            <Link 
-              href="/login"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
-            >
-              Go to Login
-            </Link>
+        </div>
+
+        {/* Right side - Success Message */}
+        <div className="flex flex-col justify-center px-8 md:px-16 w-full lg:w-1/2 bg-gray-50">
+          <div className="max-w-md mx-auto w-full">
+            {/* Mobile logo */}
+            <div className="mb-8 lg:hidden text-center">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Secura<span className="text-blue-600">ID</span>
+              </h2>
+            </div>
+
+            <div className="text-center bg-white rounded-lg shadow-md p-8">
+              <div className="mb-6">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Akun Berhasil Dibuat!</h2>
+              <p className="text-gray-600 mb-8">Akun Anda telah berhasil dibuat dan siap digunakan.</p>
+              <Link
+                href="/login"
+                className="w-full inline-flex justify-center py-3 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                Pergi ke Halaman Login
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -84,109 +119,167 @@ export default function SignUp() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Create an Account</h2>
-          <p className="mt-2 text-gray-600">Sign up to get started</p>
+    <div className="flex min-h-screen w-full">
+      {/* Left side - Indonesian Cultural Background */}
+      <div className="hidden lg:flex w-1/2 relative">
+        <Image
+          src="/background.png"
+          alt="Indonesian Cultural Background"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Logo overlay */}
+        <div className="absolute top-8 left-8 z-10">
+          <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
+            <h2 className="text-xl font-bold text-gray-800">
+              Secura<span className="text-blue-600">ID</span>
+            </h2>
+          </div>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-          {error && (
-            <div className="p-3 bg-red-50 text-red-500 rounded-md text-sm">
-              {error}
-            </div>
-          )}
-          
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <div className="mt-1">
+      </div>
+
+      {/* Right side - Sign Up Form */}
+      <div className="flex flex-col justify-center px-8 md:px-16 w-full lg:w-1/2 bg-gray-50">
+        <div className="max-w-md mx-auto w-full">
+          {/* Mobile logo - only shown on small screens */}
+          <div className="mb-8 lg:hidden text-center">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Secura<span className="text-blue-600">ID</span>
+            </h2>
+          </div>
+
+          {/* Sign Up Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Sign Up</h1>
+            <p className="text-gray-600">
+              Silakan masukkan data Anda untuk melanjutkan
+            </p>
+          </div>
+
+          {/* Sign Up Form */}
+          <form onSubmit={handleSignUp} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Username Field */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
               <input
                 id="username"
                 name="username"
                 type="text"
+                placeholder="Masukkan username Anda"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <div className="mt-1">
+
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email address
+              </label>
               <input
                 id="email"
                 name="email"
                 type="email"
+                placeholder="name@example.com"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="mt-1">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-              />
+
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Masukkan password Anda"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-              Confirm Password
-            </label>
-            <div className="mt-1">
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-              />
+
+            {/* Confirm Password Field */}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Konfirmasi password Anda"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div>
+
+            {/* Sign Up Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Creating account...' : 'Sign up'}
+              {loading ? 'Membuat akun...' : 'Sign Up'}
             </button>
+          </form>
+
+          {/* Sign In Link */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-600">
+              Sudah memiliki akun?{' '}
+              <Link
+                href="/login"
+                className="text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors"
+              >
+                Sign In
+              </Link>
+            </p>
           </div>
-        </form>
-        
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-purple-600 hover:text-purple-700 transition-colors">
-              Sign in
-            </Link>
-          </p>
         </div>
       </div>
     </div>
