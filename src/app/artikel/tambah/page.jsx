@@ -60,16 +60,21 @@ export default function TambahArtikelPage() {
       // Pastikan email pengguna saat ini disimpan sebagai penulis
       const newArticleData = {
         ...formData,
-        penulisartikel: currentUser?.email
+        penulisartikel: currentUser?.email,
+        artikel_status: "pending" // Pastikan status artikel adalah pending
       };
       
+      console.log('Submitting new article:', newArticleData);
+      
       // Create new artikel
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('artikel')
-        .insert([newArticleData]);
+        .insert([newArticleData])
+        .select();
       
       if (error) throw error;
       
+      console.log('Article created successfully:', data);
       alert("Artikel berhasil ditambahkan");
       router.push('/artikel'); // Redirect ke halaman manajemen artikel
     } catch (error) {

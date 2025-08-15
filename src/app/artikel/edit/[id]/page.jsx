@@ -86,22 +86,18 @@ export default function EditArtikelPage({ params }) {
     try {
       setLoading(true);
       
-      console.log('Submitting form data:', formData);
+      console.log('Updating article with data:', formData);
       
       // Update artikel
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('artikel')
-        .update({
-          titleartikel: formData.titleartikel,
-          kontenartikel: formData.kontenartikel,
-          penulisartikel: formData.penulisartikel,
-          artikel_status: formData.artikel_status,
-          gambar_artikel: formData.gambar_artikel
-        })
-        .eq('idartikel', id);
+        .update(formData)
+        .eq('idartikel', id)
+        .select();
       
       if (error) throw error;
       
+      console.log('Article updated successfully:', data);
       alert("Artikel berhasil diperbarui");
       router.push('/artikel'); // Redirect ke halaman manajemen artikel
     } catch (error) {

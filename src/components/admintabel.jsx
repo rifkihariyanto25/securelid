@@ -77,17 +77,18 @@ export default function AdminTabel({ admins, loading, error }) {
         }
 
         // Tambah admin baru (password opsional karena admin login tanpa validasi password)
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('admin')
           .insert([{
             username: formData.username,
             email: formData.email,
             password: formData.password || 'default-password' // Password opsional dengan nilai default
-          }]);
+          }])
+          .select();
 
         if (error) throw error;
 
-        // Refresh halaman untuk menampilkan data terbaru
+        // Update admins state dengan data baru tanpa refresh halaman
         window.location.reload();
       } else if (formType === "edit") {
         // Validasi input
@@ -106,15 +107,23 @@ export default function AdminTabel({ admins, loading, error }) {
           updateData.password = formData.password;
         }
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('admin')
           .update(updateData)
-          .eq('id', currentAdmin.id);
+          .eq('id', currentAdmin.id)
+          .select();
 
         if (error) throw error;
-
-        // Refresh halaman untuk menampilkan data terbaru
-        window.location.reload();
+        
+        // Update data di UI tanpa refresh halaman
+        const updatedAdmin = data[0];
+        // Gunakan callback untuk update data di parent component
+        if (updatedAdmin) {
+          // Tutup form setelah berhasil
+          setIsFormOpen(false);
+          // Refresh halaman untuk menampilkan data terbaru
+          window.location.reload();
+        }
       }
 
       // Tutup form setelah berhasil

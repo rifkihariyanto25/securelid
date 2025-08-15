@@ -101,7 +101,7 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                 .from('artikel')
                 .upload(filePath, imageFile, {
                     cacheControl: '3600',
-                    upsert: true // Ubah ke true untuk menimpa file yang sudah ada
+                    upsert: false
                 });
                 
             if (error) throw error;
@@ -111,7 +111,6 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                 .from('artikel')
                 .getPublicUrl(filePath);
                 
-            console.log('Image URL:', urlData.publicUrl); // Tambahkan log untuk debugging
             return urlData.publicUrl;
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -126,33 +125,28 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
         e.preventDefault();
         
         try {
+            setUploading(true);
+            let finalFormData = {...formData};
+            
             // Upload image if there's a new image file
             if (imageFile) {
-                setUploading(true);
                 const imageUrl = await uploadImage();
                 if (imageUrl) {
                     // Update formData with the image URL
-                    const updatedFormData = {
-                        ...formData,
+                    finalFormData = {
+                        ...finalFormData,
                         gambar_artikel: imageUrl
                     };
-                    
-                    // Submit with updated image URL
-                    console.log('Submitting with image URL:', imageUrl);
-                    onSubmit(updatedFormData);
-                } else {
-                    // If image upload failed, submit without image
-                    console.log('Image upload failed, submitting without image');
-                    onSubmit(formData);
                 }
-            } else {
-                // No new image, submit as is
-                console.log('No new image, submitting as is:', formData.gambar_artikel);
-                onSubmit(formData);
             }
+            
+            // Ensure we're submitting the most up-to-date data
+            console.log('Submitting article data:', finalFormData);
+            onSubmit(finalFormData);
+            
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('Terjadi kesalahan saat menyimpan artikel');
+            alert('Terjadi kesalahan saat menyimpan artikel: ' + error.message);
         } finally {
             setUploading(false);
         }
