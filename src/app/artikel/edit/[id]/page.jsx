@@ -37,7 +37,7 @@ export default function EditArtikelPage({ params }) {
         const { data: artikelData, error: artikelError } = await supabase
           .from('artikel')
           .select('*')
-          .eq('id', id)
+          .eq('idartikel', id)
           .single();
 
         if (artikelError) {
@@ -90,7 +90,7 @@ export default function EditArtikelPage({ params }) {
       const { error } = await supabase
         .from('artikel')
         .update(formData)
-        .eq('id', id);
+        .eq('idartikel', id);
       
       if (error) throw error;
       
