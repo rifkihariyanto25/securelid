@@ -551,8 +551,16 @@ const ArtikelTabel = () => {
                                 >
                                     <td className="py-4 px-2">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-[var(--secondary)] rounded-lg flex items-center justify-center">
-                                                <span className="text-xl text-[var(--primary)]">{item.titleartikel ? item.titleartikel.charAt(0) : '?'}</span>
+                                            <div className="w-12 h-12 bg-[var(--secondary)] rounded-lg flex items-center justify-center overflow-hidden">
+                                                {item.gambar_artikel ? (
+                                                    <img 
+                                                        src={item.gambar_artikel} 
+                                                        alt={item.titleartikel} 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <span className="text-xl text-[var(--primary)]">{item.titleartikel ? item.titleartikel.charAt(0) : '?'}</span>
+                                                )}
                                             </div>
                                             <div>
                                                 <div className="font-medium text-[var(--foreground)] line-clamp-2 max-w-xs">
