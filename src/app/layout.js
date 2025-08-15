@@ -23,14 +23,19 @@ const geistMono = Geist_Mono({
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   // Halaman yang tidak menampilkan sidebar
-  const noSidebarPages = ["/landingpage", "/", "/login", "/sign-up", "/forgot-password", "/reset-password", "/artikelpage", "/artikelpage/1", "/artikelpage/2", "/artikelpage/3", "/artikelpage/4", "/artikelpage/5", "/artikelpage/6"];
-  const isNoSidebarPage = noSidebarPages.includes(pathname);
+  const noSidebarPages = ["/landingpage", "/", "/login", "/sign-up", "/forgot-password", "/reset-password", "/artikelpage"];
+  
+  // Cek apakah halaman saat ini adalah halaman artikel dengan ID dinamis
+  const isArticleDetailPage = pathname.startsWith('/artikelpage/') && pathname !== '/artikelpage/';
+  
+  // Halaman tidak menampilkan sidebar jika termasuk dalam daftar atau merupakan halaman detail artikel
+  const isNoSidebarPage = noSidebarPages.includes(pathname) || isArticleDetailPage;
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {isNoSidebarPage ? (
-          // Layout khusus untuk halaman tanpa sidebar (landing page, login, sign-up, dll)
+          // Layout khusus untuk halaman tanpa sidebar (landing page, login, sign-up, artikelpage, dll)
           <div className="overflow-auto">
             {children}
           </div>
