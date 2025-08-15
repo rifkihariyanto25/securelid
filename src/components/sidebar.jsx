@@ -123,7 +123,17 @@ const Sidebar = () => {
             className={`relative z-10 transition-all duration-200 flex-shrink-0 ${isSidebarOpen ? "w-64" : "w-20"
                 }`}
         >
-            <div className="h-full bg-white p-4 flex flex-col border-r border-[var(--border)]">
+            <div 
+                className="h-full bg-white p-4 flex flex-col border-r border-[var(--border)]"
+                style={{
+                    backgroundImage: "url('/bendera.png')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundBlendMode: "soft-light",
+                    backgroundColor: "rgba(255, 255, 255, 0.9)"
+                }}
+            >
                 {/* Toggle Button */}
                 <button
                     onClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -155,9 +165,9 @@ const Sidebar = () => {
                                     className="block"
                                 >
                                     <div
-                                        className={`flex items-center p-4 text-sm font-medium rounded-lg hover:bg-[var(--secondary)] transition-all duration-200 mb-2 group ${isActive
-                                                ? "bg-[var(--secondary)] text-[var(--foreground)] border-l-4 border-[var(--primary)]"
-                                                : "text-[var(--foreground)]"
+                                        className={`flex items-center p-4 text-sm font-medium rounded-lg hover:bg-[var(--secondary)] hover:bg-opacity-70 transition-all duration-200 mb-2 group ${isActive
+                                                ? "bg-[var(--secondary)] bg-opacity-70 text-[var(--foreground)] border-l-4 border-[var(--primary)]"
+                                                : "text-[var(--foreground)] font-semibold"
                                             }`}
                                         role="menuitem"
                                     >
@@ -175,7 +185,7 @@ const Sidebar = () => {
                                             </span>
                                         )}
                                         {!isSidebarOpen && (
-                                            <div className="absolute left-20 bg-[var(--secondary)] text-[var(--foreground)] px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                            <div className="absolute left-20 bg-[var(--secondary)] bg-opacity-90 text-[var(--foreground)] font-semibold px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-md">
                                                 {item.name}
                                             </div>
                                         )}
