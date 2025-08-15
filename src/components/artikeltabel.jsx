@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
     Edit,
     Trash2,
@@ -20,6 +21,7 @@ import ArtikelForm from "./artikelform";
 import AdminCommentForm from "./admincommentform";
 
 const ArtikelTabel = () => {
+    const router = useRouter();
     const [artikel, setArtikel] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,10 +31,7 @@ const ArtikelTabel = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     
-    // Form state
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [formType, setFormType] = useState("add"); // add, edit, view
-    const [currentArtikel, setCurrentArtikel] = useState(null);
+    // State untuk form komentar admin saja, form artikel sudah dipindahkan ke halaman terpisah
     
     // State untuk menyimpan informasi user dan role
     const [currentUser, setCurrentUser] = useState(null);
@@ -163,12 +162,8 @@ const ArtikelTabel = () => {
 
     // CRUD Actions
     const handleView = (id) => {
-        const artikelToView = artikel.find(item => item.idartikel === id);
-        if (artikelToView) {
-            setCurrentArtikel(artikelToView);
-            setFormType("view");
-            setIsFormOpen(true);
-        }
+        // Navigasi ke halaman view artikel
+        router.push(`/artikel/view/${id}`);
     };
 
     const handleEdit = (id) => {
@@ -180,9 +175,8 @@ const ArtikelTabel = () => {
             return;
         }
         
-        setCurrentArtikel(artikelToEdit);
-        setFormType("edit");
-        setIsFormOpen(true);
+        // Navigasi ke halaman edit artikel
+        router.push(`/artikel/edit/${id}`);
     };
 
     const handleDelete = async (id) => {
@@ -217,62 +211,12 @@ const ArtikelTabel = () => {
     };
 
     const handleAdd = () => {
-        setCurrentArtikel({
-            penulisartikel: currentUser?.email // Set the current user's email as the author
-        });
-        setFormType("add");
-        setIsFormOpen(true);
+        // Navigasi ke halaman tambah artikel baru
+        router.push('/artikel/tambah');
     };
     
-    const handleFormSubmit = async (formData) => {
-        try {
-            setLoading(true);
-            
-            if (formType === "add") {
-                // Pastikan email pengguna saat ini disimpan sebagai penulis
-                const newArticleData = {
-                    ...formData,
-                    penulisartikel: currentUser?.email
-                };
-                
-                // Create new artikel
-                const { error } = await supabase
-                    .from('artikel')
-                    .insert([newArticleData]);
-                
-                if (error) throw error;
-                alert("Artikel berhasil ditambahkan");
-            } else if (formType === "edit") {
-                // Pastikan pengguna hanya dapat mengedit artikel miliknya sendiri (kecuali admin)
-                if (userRole !== 'admin' && currentArtikel.penulisartikel !== currentUser?.email) {
-                    throw new Error("Anda tidak memiliki izin untuk mengedit artikel ini");
-                }
-                
-                // Update existing artikel
-                const { error } = await supabase
-                    .from('artikel')
-                    .update(formData)
-                    .eq('idartikel', currentArtikel.idartikel);
-                
-                if (error) throw error;
-                alert("Artikel berhasil diperbarui");
-            }
-            
-            // Close form and refresh data
-            setIsFormOpen(false);
-            fetchArtikel(currentUser?.email, userRole);
-        } catch (error) {
-            console.error('Error submitting artikel:', error);
-            alert(error.message || "Gagal menyimpan artikel");
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    const handleCloseForm = () => {
-        setIsFormOpen(false);
-        setCurrentArtikel(null);
-    };
+    // Fungsi handleFormSubmit dan handleCloseForm sudah tidak digunakan lagi
+    // karena form artikel sudah dipindahkan ke halaman terpisah
     
     // Fungsi untuk menangani perubahan status artikel
     const handleChangeStatus = async (artikelId, newStatus) => {
@@ -686,21 +630,7 @@ const ArtikelTabel = () => {
                 </div>
             )}
             
-            {/* Form Modal */}
-            {isFormOpen && (
-                <ArtikelForm
-                    isOpen={isFormOpen}
-                    onClose={handleCloseForm}
-                    artikel={currentArtikel}
-                    onSubmit={handleFormSubmit}
-                    formType={formType}
-                    userRole={userRole}
-                    onChangeStatus={handleChangeStatus}
-                    onRejectArticle={handleRejectArticle}
-                    onViewComment={handleViewComment}
-                    adminComments={adminComments}
-                />
-            )}
+            {/* Form Modal sudah tidak digunakan lagi, diganti dengan halaman terpisah */}
             
             {/* Admin Comment Form */}
             {isCommentFormOpen && (
