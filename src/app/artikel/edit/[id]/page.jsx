@@ -86,10 +86,18 @@ export default function EditArtikelPage({ params }) {
     try {
       setLoading(true);
       
+      console.log('Submitting form data:', formData);
+      
       // Update artikel
       const { error } = await supabase
         .from('artikel')
-        .update(formData)
+        .update({
+          titleartikel: formData.titleartikel,
+          kontenartikel: formData.kontenartikel,
+          penulisartikel: formData.penulisartikel,
+          artikel_status: formData.artikel_status,
+          gambar_artikel: formData.gambar_artikel
+        })
         .eq('idartikel', id);
       
       if (error) throw error;

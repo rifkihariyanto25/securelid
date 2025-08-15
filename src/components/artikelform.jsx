@@ -101,7 +101,7 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                 .from('artikel')
                 .upload(filePath, imageFile, {
                     cacheControl: '3600',
-                    upsert: false
+                    upsert: true // Ubah ke true untuk menimpa file yang sudah ada
                 });
                 
             if (error) throw error;
@@ -111,6 +111,7 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                 .from('artikel')
                 .getPublicUrl(filePath);
                 
+            console.log('Image URL:', urlData.publicUrl); // Tambahkan log untuk debugging
             return urlData.publicUrl;
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -131,22 +132,22 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                 const imageUrl = await uploadImage();
                 if (imageUrl) {
                     // Update formData with the image URL
-                    setFormData(prev => ({
-                        ...prev,
-                        gambar_artikel: imageUrl
-                    }));
-                    
-                    // Submit with updated image URL
-                    onSubmit({
+                    const updatedFormData = {
                         ...formData,
                         gambar_artikel: imageUrl
-                    });
+                    };
+                    
+                    // Submit with updated image URL
+                    console.log('Submitting with image URL:', imageUrl);
+                    onSubmit(updatedFormData);
                 } else {
                     // If image upload failed, submit without image
+                    console.log('Image upload failed, submitting without image');
                     onSubmit(formData);
                 }
             } else {
                 // No new image, submit as is
+                console.log('No new image, submitting as is:', formData.gambar_artikel);
                 onSubmit(formData);
             }
         } catch (error) {
