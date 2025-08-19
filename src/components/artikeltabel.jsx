@@ -247,41 +247,73 @@ const ArtikelTabel = () => {
             console.log('Starting handleRejectArticle with:', { artikelId, adminId, userRole });
             
             // Pastikan adminId tersedia
-            if (!adminId && userRole === 'admin') {
+            if ((adminId === null || adminId === undefined) && userRole === 'admin') {
                 console.log('Admin ID not found, fetching again...');
                 const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    console.log('Session found:', { userEmail: session.user.email });
-                    
-                    const { data: adminData, error: adminError } = await supabase
-                        .from('admin')
-                        .select('id')
-                        .eq('email', session.user.email)
-                        .single();
-                    
-                    if (adminError) {
-                        console.error('Error fetching admin ID:', adminError);
-                        throw new Error(`Gagal mendapatkan ID admin: ${adminError.message || JSON.stringify(adminError)}`);
-                    }
-                    
-                    if (adminData) {
-                        console.log('Admin data found:', adminData);
-                        // Ensure adminId is a number
-                        const adminIdValue = typeof adminData.id === 'string' ? parseInt(adminData.id, 10) : adminData.id;
-                        setAdminId(adminIdValue);
-                        console.log('Admin ID set:', adminIdValue);
-                    } else {
-                        console.error('Admin data not found for email:', session.user.email);
-                        throw new Error('Data admin tidak ditemukan. Silakan refresh halaman dan coba lagi.');
-                    }
-                } else {
+                if (!session) {
                     console.error('No session found');
                     throw new Error('Sesi pengguna tidak ditemukan. Silakan login kembali.');
                 }
+                
+                console.log('Session found:', { userEmail: session.user.email });
+                
+                const { data: adminData, error: adminError } = await supabase
+                    .from('admin')
+                    .select('id')
+                    .eq('email', session.user.email)
+                    .single();
+                
+                if (adminError) {
+                    console.error('Error fetching admin ID:', adminError);
+                    throw new Error(`Gagal mendapatkan ID admin: ${adminError.message || JSON.stringify(adminError)}`);
+                }
+                
+                if (!adminData) {
+                    console.error('Admin data not found for email:', session.user.email);
+                    throw new Error('Data admin tidak ditemukan. Silakan refresh halaman dan coba lagi.');
+                }
+                
+                console.log('Admin data found:', adminData);
+                // Ensure adminId is a number
+                let adminIdValue;
+                if (typeof adminData.id === 'string') {
+                    adminIdValue = parseInt(adminData.id, 10);
+                    if (isNaN(adminIdValue)) {
+                        console.error('Invalid admin ID (NaN after parsing):', adminData.id);
+                        throw new Error(`ID Admin tidak valid: ${adminData.id}`);
+                    }
+                } else if (typeof adminData.id === 'number') {
+                    adminIdValue = adminData.id;
+                } else {
+                    console.error('Invalid admin ID type:', typeof adminData.id);
+                    throw new Error(`Tipe data ID Admin tidak valid: ${typeof adminData.id}`);
+                }
+                
+                if (adminIdValue <= 0) {
+                    console.error('Invalid admin ID (not positive):', adminIdValue);
+                    throw new Error(`ID Admin harus positif: ${adminIdValue}`);
+                }
+                
+                setAdminId(adminIdValue);
+                console.log('Admin ID set:', adminIdValue);
+                
+                // Gunakan setTimeout dengan waktu yang lebih lama untuk memastikan adminId sudah diset sebelum membuka form
+                setTimeout(() => {
+                    console.log('Opening comment form with delay, adminId:', adminIdValue);
+                    // Pastikan adminId sudah tersedia di state
+                    if (adminIdValue) {
+                        setCurrentArtikelId(artikelId);
+                        setIsCommentFormOpen(true);
+                    } else {
+                        console.error('Admin ID still not available in setTimeout');
+                        alert('ID Admin masih tidak tersedia. Silakan refresh halaman dan coba lagi.');
+                    }
+                }, 300);
+                return; // Keluar dari fungsi karena form akan dibuka oleh setTimeout
             }
             
             // Tambahkan pengecekan final untuk adminId
-            if (!adminId && userRole === 'admin') {
+            if ((adminId === null || adminId === undefined) && userRole === 'admin') {
                 console.error('Admin ID still not available after fetch attempt');
                 throw new Error('ID Admin masih tidak tersedia. Silakan refresh halaman dan coba lagi.');
             }
@@ -291,6 +323,7 @@ const ArtikelTabel = () => {
             setIsCommentFormOpen(true);
         } catch (error) {
             console.error('Error preparing rejection form:', error);
+            setError(error.message || 'Terjadi kesalahan saat menyiapkan form penolakan');
             alert(error.message || 'Terjadi kesalahan saat menyiapkan form penolakan');
         }
     };
@@ -298,6 +331,11 @@ const ArtikelTabel = () => {
     // Fungsi untuk melihat komentar penolakan
     const handleViewComment = async (artikelId) => {
         try {
+            // Jika adminComments belum diambil, coba ambil lagi
+            if (!adminComments[artikelId]) {
+                await fetchAdminComments();
+            }
+            
             const comment = adminComments[artikelId];
             if (comment) {
                 alert(`Alasan Penolakan: ${comment.comment}`);
@@ -311,12 +349,38 @@ const ArtikelTabel = () => {
     };
     
     // Fungsi untuk menangani submit form komentar
-    const handleCommentSubmit = async () => {
+    const handleCommentSubmit = async (updatedArtikel = null, errorMessage = null) => {
         try {
-            // Refresh data setelah menambahkan komentar
-            console.log('Refreshing data after comment submission');
-            await fetchArtikel(currentUser?.email, userRole);
-            await fetchAdminComments();
+            // Jika ada error message, tampilkan error dan jangan lakukan apa-apa
+            if (errorMessage) {
+                console.error('Error from AdminCommentForm:', errorMessage);
+                setError(errorMessage);
+                return;
+            }
+            
+            // Jika updatedArtikel diberikan dari AdminCommentForm, perbarui data di tabel
+            if (updatedArtikel) {
+                console.log('Using updated article data from form:', updatedArtikel);
+                // Perbarui data artikel di tabel secara langsung
+                setArtikel(prevArtikel => {
+                    return prevArtikel.map(artikel => {
+                        if (artikel.idartikel === updatedArtikel.idartikel) {
+                            return {...artikel, artikel_status: 'rejected'};
+                        }
+                        return artikel;
+                    });
+                });
+                // Ambil komentar admin terbaru
+                await fetchAdminComments();
+            } else {
+                // Jika tidak ada data yang diberikan, refresh semua data
+                console.log('Refreshing all data after comment submission');
+                await fetchArtikel(currentUser?.email, userRole);
+                await fetchAdminComments();
+            }
+            
+            // Tutup form komentar
+            setIsCommentFormOpen(false);
             alert("Artikel berhasil ditolak");
         } catch (error) {
             console.error('Error after submitting comment:', error);
@@ -334,6 +398,7 @@ const ArtikelTabel = () => {
             
             // Tetap tampilkan pesan sukses karena penolakan artikel berhasil
             // meskipun ada error saat refresh data
+            setIsCommentFormOpen(false);
             alert("Artikel berhasil ditolak");
             
             // Coba refresh data lagi setelah beberapa detik
@@ -633,7 +698,7 @@ const ArtikelTabel = () => {
             {/* Form Modal sudah tidak digunakan lagi, diganti dengan halaman terpisah */}
             
             {/* Admin Comment Form */}
-            {isCommentFormOpen && (
+            {isCommentFormOpen && currentArtikelId && adminId && (
                 <AdminCommentForm
                     isOpen={isCommentFormOpen}
                     onClose={handleCloseCommentForm}

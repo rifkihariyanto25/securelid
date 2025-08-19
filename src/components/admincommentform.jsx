@@ -27,14 +27,48 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
                 throw new Error("Komentar tidak boleh kosong");
             }
 
-            if (!adminId) {
+            console.log('Starting comment submission with raw values:', { artikelId, adminId, comment });
+            
+            // Validasi adminId - lebih ketat
+            if (adminId === null || adminId === undefined) {
                 console.error('Admin ID is missing:', { adminId });
                 throw new Error("ID Admin tidak ditemukan. Silakan refresh halaman dan coba lagi.");
+            } else if (typeof adminId !== 'number' && typeof adminId !== 'string') {
+                console.error('Admin ID has invalid type:', { adminId, type: typeof adminId });
+                throw new Error(`Tipe data ID Admin tidak valid: ${typeof adminId}`);
+            }
+            
+            // Coba konversi adminId ke number untuk validasi awal
+            let adminIdNum;
+            if (typeof adminId === 'string') {
+                adminIdNum = parseInt(adminId, 10);
+                if (isNaN(adminIdNum)) {
+                    console.error('Admin ID is not a valid number:', { adminId });
+                    throw new Error(`ID Admin tidak valid (bukan angka): ${adminId}`);
+                }
+            } else if (typeof adminId === 'number') {
+                adminIdNum = adminId;
             }
 
-            if (!artikelId) {
+            // Validasi artikelId - lebih ketat
+            if (artikelId === null || artikelId === undefined) {
                 console.error('Artikel ID is missing:', { artikelId });
                 throw new Error("ID Artikel tidak ditemukan. Silakan refresh halaman dan coba lagi.");
+            } else if (typeof artikelId !== 'number' && typeof artikelId !== 'string') {
+                console.error('Artikel ID has invalid type:', { artikelId, type: typeof artikelId });
+                throw new Error(`Tipe data ID Artikel tidak valid: ${typeof artikelId}`);
+            }
+            
+            // Coba konversi artikelId ke number untuk validasi awal
+            let artikelIdNum;
+            if (typeof artikelId === 'string') {
+                artikelIdNum = parseInt(artikelId, 10);
+                if (isNaN(artikelIdNum)) {
+                    console.error('Artikel ID is not a valid number:', { artikelId });
+                    throw new Error(`ID Artikel tidak valid (bukan angka): ${artikelId}`);
+                }
+            } else if (typeof artikelId === 'number') {
+                artikelIdNum = artikelId;
             }
 
             console.log('Submitting comment with:', { artikelId, adminId, comment });
@@ -55,49 +89,64 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
             } else {
                 // Create new comment
                 // Pastikan artikel_id dan admin_id adalah tipe data yang benar (bigint)
-                const artikel_id = parseInt(artikelId, 10);
-                const admin_id = parseInt(adminId, 10);
+                let artikel_id, admin_id;
                 
-                // Add more detailed logging
-                console.log('Inserting comment with parsed IDs:', { 
-                    artikel_id, 
-                    admin_id, 
-                    comment,
-                    artikelId_type: typeof artikelId,
-                    adminId_type: typeof adminId,
-                    artikelId_raw: artikelId,
-                    adminId_raw: adminId,
-                    isNaN_artikel_id: isNaN(artikel_id),
-                    isNaN_admin_id: isNaN(admin_id)
-                });
-                
-                // Check for invalid IDs
-                if (isNaN(artikel_id)) {
-                    throw new Error(`ID Artikel tidak valid: ${artikelId}`);
+                try {
+                    // Coba konversi ke number terlebih dahulu
+                    // Gunakan nilai yang sudah divalidasi sebelumnya
+                    artikel_id = artikelIdNum;
+                    admin_id = adminIdNum;
+                    
+                    // Pastikan nilai tidak undefined
+                    if (artikel_id === undefined) {
+                        console.error('artikelIdNum is undefined after validation');
+                        throw new Error('ID Artikel tidak valid setelah validasi');
+                    }
+                    
+                    if (admin_id === undefined) {
+                        console.error('adminIdNum is undefined after validation');
+                        throw new Error('ID Admin tidak valid setelah validasi');
+                    }
+                    
+                    // Add more detailed logging
+                    console.log('Processing IDs for insertion:', { 
+                        artikel_id, 
+                        admin_id, 
+                        comment,
+                        artikelId_type: typeof artikelId,
+                        adminId_type: typeof adminId,
+                        artikelId_raw: artikelId,
+                        adminId_raw: adminId
+                    });
+                    
+                    // Check for invalid IDs
+                    if (isNaN(artikel_id)) {
+                        console.error('artikelId is NaN after conversion:', artikelId);
+                        throw new Error(`ID Artikel tidak valid (NaN): ${artikelId}`);
+                    }
+                    
+                    if (isNaN(admin_id)) {
+                        console.error('adminId is NaN after conversion:', adminId);
+                        throw new Error(`ID Admin tidak valid (NaN): ${adminId}`);
+                    }
+                    
+                    // Pastikan ID adalah bilangan bulat positif
+                    if (artikel_id <= 0) {
+                        throw new Error(`ID Artikel harus positif: ${artikel_id}`);
+                    }
+                    
+                    if (admin_id <= 0) {
+                        throw new Error(`ID Admin harus positif: ${admin_id}`);
+                    }
+                } catch (conversionError) {
+                    console.error('Error converting IDs:', conversionError);
+                    throw new Error(`Error konversi ID: ${conversionError.message}`);
                 }
                 
-                if (isNaN(admin_id)) {
-                    throw new Error(`ID Admin tidak valid: ${adminId}`);
-                }
-                
-                const { data, error } = await supabase
-                    .from('admin_comment')
-                    .insert([{
-                        artikel_id: artikel_id,
-                        admin_id: admin_id,
-                        comment
-                    }]);
-
-                if (error) {
-                    console.error('Error inserting comment:', error);
-                    // Handle empty error object case
-                    const errorDetails = Object.keys(error).length === 0 ? 'Terjadi kesalahan tidak diketahui' : (error.message || JSON.stringify(error));
-                    throw new Error(`Gagal menyimpan komentar: ${errorDetails}`);
-                }
-                console.log('Comment inserted successfully:', data);
+                console.log('Skipping admin_comment table insertion, will only update artikel table');
             }
 
-            // Update artikel status to rejected
+            // Update artikel status to rejected and save comment directly to artikel table
             // Pastikan idartikel adalah tipe data yang benar (bigint)
             const idartikel = parseInt(artikelId, 10);
             console.log('Updating artikel status with parsed ID:', { 
@@ -111,10 +160,15 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
                 throw new Error(`ID Artikel tidak valid untuk update status: ${artikelId}`);
             }
             
-            const { error: artikelError } = await supabase
+            const { data: updatedArtikel, error: artikelError } = await supabase
                 .from('artikel')
-                .update({ artikel_status: 'rejected' })
-                .eq('idartikel', idartikel);
+                .update({ 
+                    artikel_status: 'rejected',
+                    admin_comment: comment // Simpan komentar langsung ke kolom admin_comment di tabel artikel
+                })
+                .eq('idartikel', idartikel)
+                .select('*')
+                .single();
 
             if (artikelError) {
                 console.error('Error updating artikel status:', artikelError);
@@ -123,11 +177,15 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
                 throw new Error(`Gagal mengubah status artikel: ${errorDetails}`);
             }
 
-            console.log('Article status updated successfully');
-            onSubmit && onSubmit();
+            console.log('Article status updated successfully:', updatedArtikel);
+            // Panggil callback dengan data artikel yang diperbarui
+            if (onSubmit && typeof onSubmit === 'function') {
+                onSubmit(updatedArtikel);
+            }
             onClose();
         } catch (error) {
             console.error('Error submitting comment:', error);
+            
             // Pastikan error ditampilkan dengan benar
             let errorMessage;
             if (error.message) {
@@ -140,7 +198,27 @@ const AdminCommentForm = ({ isOpen, onClose, artikelId, adminId, onSubmit, exist
             } else {
                 errorMessage = "Terjadi kesalahan saat menolak artikel";
             }
+            
+            // Log error details untuk debugging
+            console.log('Error details:', {
+                errorType: typeof error,
+                errorMessage: errorMessage,
+                errorObject: error,
+                adminId: adminId,
+                artikelId: artikelId,
+                adminId_type: typeof adminId,
+                artikelId_type: typeof artikelId
+            });
+            
             setError(errorMessage);
+            
+            // Jika callback onSubmit tersedia, panggil dengan error untuk penanganan di komponen induk
+            if (onSubmit && typeof onSubmit === 'function') {
+                onSubmit(null, errorMessage);
+            }
+            
+            // Jangan tutup form jika terjadi error
+            // Biarkan pengguna melihat pesan error dan mencoba lagi
         } finally {
             setLoading(false);
         }

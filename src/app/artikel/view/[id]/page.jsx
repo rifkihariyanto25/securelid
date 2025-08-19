@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import supabase from "../../../../lib/supabase";
 import ArtikelForm from "../../../../components/artikelform";
 import AdminCommentForm from "../../../../components/admincommentform";
 
-export default function ViewArtikelPage({ params }) {
+export default function ViewArtikelPage() {
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = params?.id;
   
   const [loading, setLoading] = useState(true);
   const [artikel, setArtikel] = useState(null);
@@ -17,6 +18,52 @@ export default function ViewArtikelPage({ params }) {
   const [adminComments, setAdminComments] = useState({});
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [adminId, setAdminId] = useState(null);
+
+  // Fungsi untuk mengambil komentar admin (didefinisikan sebelum useEffect)
+  const fetchAdminComments = async (artikelId) => {
+    try {
+      console.log('Fetching admin comments for artikel ID:', artikelId);
+      const { data, error } = await supabase
+        .from('admin_comment')
+        .select('*')
+        .eq('artikel_id', artikelId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 adalah kode untuk 'tidak ada data'
+        throw error;
+      }
+      
+      if (data) {
+        console.log('Admin comment data received:', data);
+        // Simpan komentar dalam format yang sama dengan yang digunakan di ArtikelTabel
+        const commentsByArticle = {};
+        commentsByArticle[artikelId] = data;
+        setAdminComments(commentsByArticle);
+        console.log('Updated adminComments state:', commentsByArticle);
+      } else {
+        console.log('No admin comment data found for artikel ID:', artikelId);
+        // Coba cek apakah ada komentar di kolom admin_comment pada tabel artikel
+        const { data: artikelData, error: artikelError } = await supabase
+          .from('artikel')
+          .select('admin_comment')
+          .eq('idartikel', artikelId)
+          .single();
+        
+        if (artikelError) {
+          console.error('Error fetching artikel admin_comment:', artikelError);
+        } else if (artikelData && artikelData.admin_comment) {
+          console.log('Found admin_comment in artikel table:', artikelData.admin_comment);
+          // Buat objek komentar dari admin_comment di tabel artikel
+          const commentsByArticle = {};
+          commentsByArticle[artikelId] = { comment: artikelData.admin_comment };
+          setAdminComments(commentsByArticle);
+          console.log('Updated adminComments state from artikel table:', commentsByArticle);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching admin comments:', error);
+    }
+  };
 
   useEffect(() => {
     const checkUserAndFetchArtikel = async () => {
@@ -53,7 +100,8 @@ export default function ViewArtikelPage({ params }) {
         
         // Ambil komentar admin jika artikel ditolak
         if (artikelData.artikel_status === 'rejected') {
-          fetchAdminComments(artikelData.idartikel);
+          console.log('Artikel ditolak, mengambil komentar admin...');
+          await fetchAdminComments(artikelData.idartikel);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -64,30 +112,6 @@ export default function ViewArtikelPage({ params }) {
     };
 
     checkUserAndFetchArtikel();
-    
-    // Fungsi untuk mengambil komentar admin
-    const fetchAdminComments = async (artikelId) => {
-      try {
-        const { data, error } = await supabase
-          .from('admin_comment')
-          .select('*')
-          .eq('artikel_id', artikelId)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') { // PGRST116 adalah kode untuk 'tidak ada data'
-          throw error;
-        }
-        
-        if (data) {
-          // Simpan komentar dalam format yang sama dengan yang digunakan di ArtikelTabel
-          const commentsByArticle = {};
-          commentsByArticle[artikelId] = data;
-          setAdminComments(commentsByArticle);
-        }
-      } catch (error) {
-        console.error('Error fetching admin comments:', error);
-      }
-    };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -140,47 +164,56 @@ export default function ViewArtikelPage({ params }) {
   // Fungsi untuk menolak artikel dan menambahkan komentar
   const handleRejectArticle = async (artikelId) => {
     try {
+      // Reset error state
+      setError(null);
+      
       // Pastikan adminId tersedia
       if (!adminId && userRole === 'admin') {
         console.log('Admin ID not found, fetching...');
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data: adminData, error: adminError } = await supabase
-            .from('admin')
-            .select('id')
-            .eq('email', session.user.email)
-            .single();
-          
-          if (adminError) {
-            console.error('Error fetching admin ID:', adminError);
-            throw new Error(`Gagal mendapatkan ID admin: ${adminError.message}`);
-          }
-          
-          if (adminData) {
-            const adminIdValue = typeof adminData.id === 'string' ? parseInt(adminData.id, 10) : adminData.id;
-            setAdminId(adminIdValue);
-          } else {
-            throw new Error('Data admin tidak ditemukan. Silakan refresh halaman dan coba lagi.');
-          }
-        } else {
+        
+        if (!session) {
           throw new Error('Sesi pengguna tidak ditemukan. Silakan login kembali.');
         }
+        
+        console.log('User session:', session.user.email);
+        
+        const { data: adminData, error: adminError } = await supabase
+          .from('admin')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+        
+        if (adminError) {
+          console.error('Error fetching admin ID:', adminError);
+          throw new Error(`Gagal mendapatkan ID admin: ${adminError.message}`);
+        }
+        
+        if (!adminData) {
+          throw new Error('Data admin tidak ditemukan. Silakan refresh halaman dan coba lagi.');
+        }
+        
+        // Pastikan ID admin adalah number
+        const parsedAdminId = typeof adminData.id === 'string' ? parseInt(adminData.id, 10) : adminData.id;
+        console.log('Admin ID fetched successfully:', parsedAdminId, 'type:', typeof parsedAdminId);
+        
+        if (isNaN(parsedAdminId)) {
+          throw new Error(`ID Admin tidak valid: ${adminData.id}`);
+        }
+        
+        // Update state dengan ID admin yang valid
+        setAdminId(parsedAdminId);
+        
+        // Buka form komentar setelah ID admin tersedia
+        setTimeout(() => {
+          setIsCommentFormOpen(true);
+          console.log('Comment form opened with adminId:', parsedAdminId);
+        }, 100);
+      } else {
+        // AdminId sudah tersedia, langsung buka form
+        console.log('Using existing admin ID:', adminId, 'type:', typeof adminId);
+        setIsCommentFormOpen(true);
       }
-      
-      // Tambahkan pengecekan final untuk adminId
-      if (!adminId && userRole === 'admin') {
-        throw new Error('ID Admin masih tidak tersedia. Silakan refresh halaman dan coba lagi.');
-      }
-      
-      // Ubah status artikel menjadi rejected
-       const { error } = await supabase
-         .from('artikel')
-         .update({ artikel_status: 'rejected' })
-         .eq('idartikel', artikelId);
-      
-      if (error) throw error;
-      
-      setIsCommentFormOpen(true);
     } catch (error) {
       console.error('Error preparing rejection form:', error);
       alert(error.message || 'Terjadi kesalahan saat menyiapkan form penolakan');
@@ -190,11 +223,23 @@ export default function ViewArtikelPage({ params }) {
   // Fungsi untuk melihat komentar penolakan
   const handleViewComment = async (artikelId) => {
     try {
-      // Cek apakah ada komentar untuk artikel ini
+      console.log('handleViewComment called for artikel ID:', artikelId);
+      console.log('Current adminComments state:', adminComments);
+      
+      // Jika adminComments belum diambil, coba ambil lagi
+      if (!adminComments[artikelId]) {
+        console.log('No comments found for this article, fetching...');
+        await fetchAdminComments(artikelId);
+      }
+      
+      // Cek apakah ada komentar untuk artikel ini setelah fetch
+      console.log('adminComments after fetch:', adminComments);
+      
       if (adminComments[artikelId]) {
         const comment = adminComments[artikelId];
         alert(`Alasan Penolakan: ${comment.comment}`);
       } else {
+        console.log('Still no comments found after fetching');
         alert("Tidak ada komentar penolakan untuk artikel ini");
       }
     } catch (error) {
@@ -248,28 +293,49 @@ export default function ViewArtikelPage({ params }) {
   }
 
   // Fungsi untuk menangani submit form komentar
-  const handleCommentSubmit = async () => {
+  const handleCommentSubmit = async (updatedArtikel = null, errorMessage = null) => {
     try {
-      // Refresh data setelah menambahkan komentar
-      const { data: artikelData, error: artikelError } = await supabase
-        .from('artikel')
-        .select('*')
-        .eq('idartikel', id)
-        .single();
-
-      if (artikelError) throw artikelError;
-      setArtikel(artikelData);
-      
-      // Ambil komentar admin jika artikel ditolak
-      if (artikelData.artikel_status === 'rejected') {
-        await fetchAdminComments(artikelData.idartikel);
+      // Jika ada error message, tampilkan error dan jangan lakukan apa-apa
+      if (errorMessage) {
+        console.error('Error from AdminCommentForm:', errorMessage);
+        return;
       }
+      
+      console.log('Comment submitted successfully');
+      
+      // Jika updatedArtikel diberikan dari AdminCommentForm, gunakan itu
+      if (updatedArtikel) {
+        console.log('Using updated article data from form:', updatedArtikel);
+        setArtikel(updatedArtikel);
+      } else {
+        // Jika tidak, refresh data dari database
+        console.log('Refreshing article data from database...');
+        const { data: artikelData, error: artikelError } = await supabase
+          .from('artikel')
+          .select('*')
+          .eq('idartikel', id)
+          .single();
+
+        if (artikelError) {
+          console.error('Error fetching updated article data:', artikelError);
+          throw artikelError;
+        }
+        
+        console.log('Article data refreshed:', artikelData);
+        setArtikel(artikelData);
+      }
+      
+      // Ambil komentar admin karena artikel sudah ditolak
+      console.log('Article is rejected, fetching admin comments...');
+      await fetchAdminComments(id);
       
       setIsCommentFormOpen(false);
       alert("Artikel berhasil ditolak");
     } catch (error) {
       console.error('Error after submitting comment:', error);
-      alert("Artikel berhasil ditolak");
+      // Tetap tutup form dan refresh halaman meskipun terjadi error
+      setIsCommentFormOpen(false);
+      alert("Artikel berhasil ditolak, tetapi terjadi error saat memperbarui tampilan: " + (error.message || 'Terjadi kesalahan tidak diketahui'));
     }
   };
   
@@ -299,14 +365,13 @@ export default function ViewArtikelPage({ params }) {
         />
         
         {/* Form komentar admin untuk penolakan artikel */}
-        {isCommentFormOpen && (
-          <AdminCommentForm
-            artikelId={artikel.idartikel}
-            adminId={adminId}
-            onSubmit={handleCommentSubmit}
-            onClose={handleCloseCommentForm}
-          />
-        )}
+      <AdminCommentForm
+        isOpen={isCommentFormOpen}
+        artikelId={artikel ? artikel.idartikel : null}
+        adminId={adminId}
+        onSubmit={handleCommentSubmit}
+        onClose={handleCloseCommentForm}
+      />
       </main>
     </div>
   );

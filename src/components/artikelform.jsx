@@ -207,9 +207,23 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                                      </span>
                                  )}
                                  {artikel.artikel_status === "rejected" && (
-                                     <span className="flex items-center text-red-600 text-sm">
-                                         <XCircle size={16} className="mr-1" /> Ditolak
-                                     </span>
+                                     <div>
+                                         <span className="flex items-center text-red-600 text-sm">
+                                             <XCircle size={16} className="mr-1" /> Ditolak
+                                         </span>
+                                         {/* Tampilkan alasan penolakan dari adminComments jika tersedia */}
+                                         {adminComments && adminComments[artikel.idartikel] && (
+                                             <div className="mt-1 ml-5 text-red-500 text-xs italic">
+                                                 Alasan: {adminComments[artikel.idartikel].comment}
+                                             </div>
+                                         )}
+                                         {/* Tampilkan alasan penolakan dari artikel.admin_comment jika tersedia dan adminComments tidak tersedia */}
+                                         {(!adminComments || !adminComments[artikel.idartikel]) && artikel.admin_comment && (
+                                             <div className="mt-1 ml-5 text-red-500 text-xs italic">
+                                                 Alasan: {artikel.admin_comment}
+                                             </div>
+                                         )}
+                                     </div>
                                  )}
                                  {artikel.artikel_status === "pending" && (
                                      <span className="flex items-center text-amber-600 text-sm">
@@ -217,6 +231,9 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                                      </span>
                                  )}
                              </div>
+                             {/* Alasan penolakan sudah ditampilkan langsung di bawah status */}
+                             
+                             {/* Tombol untuk admin */}
                              {userRole === "admin" && (
                                  <div className="flex flex-wrap gap-2 mt-2">
                                      {artikel.artikel_status === "pending" && (
@@ -273,18 +290,7 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                                      )}
                                  </div>
                              )}
-                             {artikel.artikel_status === "rejected" && adminComments && adminComments[artikel.idartikel] && (
-                                 <div className="mt-2">
-                                     <button
-                                         type="button"
-                                         onClick={() => onViewComment(artikel.idartikel)}
-                                         className="flex items-center text-blue-600 text-xs hover:underline"
-                                     >
-                                         <MessageSquare size={14} className="mr-1" />
-                                         Lihat Alasan Penolakan
-                                     </button>
-                                 </div>
-                             )}
+
                          </div>
                      )}
                     <div className="grid grid-cols-1 gap-6">
@@ -537,6 +543,10 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                                      </span>
                                  )}
                              </div>
+                             
+                             {/* Alasan penolakan sudah ditampilkan langsung di bawah status */}
+                             
+                             {/* Tombol untuk admin */}
                              {userRole === "admin" && (
                                  <div className="flex flex-wrap gap-2 mt-2">
                                      {artikel.artikel_status === "pending" && (
@@ -600,17 +610,7 @@ const ArtikelForm = ({ isOpen, onClose, artikel, onSubmit, formType = "add", use
                                              </button>
                                          </>
                                      )}
-                                     {artikel.artikel_status === "rejected" && (
-                                         <>
-                                             <button
-                                                 type="button"
-                                                 onClick={() => onViewComment(artikel.idartikel)}
-                                                 className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-xs hover:bg-gray-200 flex items-center"
-                                             >
-                                                 <MessageSquare size={14} className="mr-1" /> Lihat Komentar
-                                             </button>
-                                         </>
-                                     )}
+                                     {/* Tombol Lihat Komentar dihapus karena alasan penolakan sudah ditampilkan langsung */}
                                  </div>
                              )}
                          </div>
